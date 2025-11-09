@@ -367,8 +367,8 @@ class FishFilletingGame {
             this.ctx.globalAlpha = 1.0;
         }
 
-        // 다음 프레임 요청 (드래그 중일 때만)
-        if (this.isDragging) {
+        // 게임이 진행 중이면 계속 렌더링
+        if (this.gameState === 'playing') {
             requestAnimationFrame(() => this.render());
         }
     }
