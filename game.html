@@ -173,7 +173,7 @@ h2 {
     border: 2px solid #e0e0e0;
     border-radius: 10px;
     background: white;
-    cursor: crosshair;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><defs><filter id="shadow"><feDropShadow dx="0.5" dy="0.5" stdDeviation="0.5" flood-opacity="0.3"/></filter></defs><g filter="url(%23shadow)"><rect x="8" y="2" width="2.5" height="28" rx="1.2" fill="%23D2691E" stroke="%238B4513" stroke-width="0.5"/><rect x="8.3" y="2" width="0.8" height="28" fill="%23F4A460"/><rect x="14" y="2" width="2.5" height="28" rx="1.2" fill="%23D2691E" stroke="%238B4513" stroke-width="0.5"/><rect x="14.3" y="2" width="0.8" height="28" fill="%23F4A460"/></g></svg>') 12 2, auto;
 }
 
 .game-hint {
@@ -436,31 +436,268 @@ class Fish {
 
     /**
      * 가시(뼈) 생성
-     * 생선 몸통 내부에 랜덤하게 배치
+     * 중앙 척추뼈와 X자 갈비뼈 구조 생성
      */
     generateBones() {
         this.bones = [];
-        const spacing = this.width / (this.boneCount + 1);
 
-        for (let i = 0; i < this.boneCount; i++) {
-            // 생선 중앙선을 따라 배치하되, 약간의 랜덤성 추가
-            const x = this.x - this.width/2 + spacing * (i + 1);
-            const y = this.y + (Math.random() - 0.5) * (this.height * 0.4);
+        // 난이도에 따른 갈비뼈 개수 (척추뼈 양쪽에 배치)
+        const ribCount = this.difficulty === 'easy' ? 4 :
+                         this.difficulty === 'normal' ? 5 : 6;
 
+        // 척추뼈 생성 (중앙 수평선을 여러 세그먼트로)
+        const spineSegments = 8;
+        const spineStartX = this.x - this.width * 0.35;
+        const spineEndX = this.x + this.width * 0.2;
+        const spineY = this.y;
+        const segmentLength = (spineEndX - spineStartX) / spineSegments;
+
+        for (let i = 0; i < spineSegments; i++) {
             this.bones.push({
-                x: x,
-                y: y,
-                radius: 8,
-                removed: false,
-                marked: false // 체크 마크 표시용
+                type: 'spine',
+                startX: spineStartX + i * segmentLength,
+                startY: spineY,
+                endX: spineStartX + (i + 1) * segmentLength,
+                endY: spineY,
+                removed: false
             });
         }
+
+        // 갈비뼈 생성 (X자 형태)
+        const ribSpacing = (spineEndX - spineStartX) / (ribCount + 1);
+        const ribLength = this.height * 0.35;
+        const ribAngle = Math.PI / 4; // 45도
+
+        for (let i = 0; i < ribCount; i++) {
+            const ribX = spineStartX + (i + 1) * ribSpacing;
+
+            // 위쪽으로 뻗는 갈비뼈 (왼쪽)
+            this.bones.push({
+                type: 'rib',
+                startX: ribX,
+                startY: spineY,
+                endX: ribX - ribLength * Math.cos(ribAngle),
+                endY: spineY - ribLength * Math.sin(ribAngle),
+                removed: false
+            });
+
+            // 위쪽으로 뻗는 갈비뼈 (오른쪽)
+            this.bones.push({
+                type: 'rib',
+                startX: ribX,
+                startY: spineY,
+                endX: ribX + ribLength * Math.cos(ribAngle),
+                endY: spineY - ribLength * Math.sin(ribAngle),
+                removed: false
+            });
+
+            // 아래쪽으로 뻗는 갈비뼈 (왼쪽)
+            this.bones.push({
+                type: 'rib',
+                startX: ribX,
+                startY: spineY,
+                endX: ribX - ribLength * Math.cos(ribAngle),
+                endY: spineY + ribLength * Math.sin(ribAngle),
+                removed: false
+            });
+
+            // 아래쪽으로 뻗는 갈비뼈 (오른쪽)
+            this.bones.push({
+                type: 'rib',
+                startX: ribX,
+                startY: spineY,
+                endX: ribX + ribLength * Math.cos(ribAngle),
+                endY: spineY + ribLength * Math.sin(ribAngle),
+                removed: false
+            });
+        }
+    }
+
+    /**
+     * 깨끗하게 발라진 생선 그리기 (모든 가시 제거 완료 시)
+     */
+    drawFilletedFish(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // 그림자 효과
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetX = 4;
+        ctx.shadowOffsetY = 4;
+
+        // 왼쪽 살코기 (위쪽으로 분리)
+        ctx.save();
+        ctx.translate(0, -this.height * 0.35);
+
+        const leftGradient = ctx.createLinearGradient(-this.width/2, -this.height/3, this.width/2, this.height/3);
+        leftGradient.addColorStop(0, '#CD853F');
+        leftGradient.addColorStop(0.5, '#F4A460');
+        leftGradient.addColorStop(1, '#D2691E');
+
+        ctx.fillStyle = leftGradient;
+        ctx.strokeStyle = '#8B4513';
+        ctx.lineWidth = 3;
+
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.width/2, this.height/3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 왼쪽 살코기 그릴 자국
+        ctx.strokeStyle = 'rgba(139, 69, 19, 0.3)';
+        ctx.lineWidth = 2;
+        for (let i = -this.width/2.5; i < this.width/2.5; i += 20) {
+            ctx.beginPath();
+            ctx.moveTo(i, -this.height/4);
+            ctx.lineTo(i + 8, this.height/4);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // 오른쪽 살코기 (아래쪽으로 분리)
+        ctx.save();
+        ctx.translate(0, this.height * 0.35);
+
+        const rightGradient = ctx.createLinearGradient(-this.width/2, -this.height/3, this.width/2, this.height/3);
+        rightGradient.addColorStop(0, '#D2691E');
+        rightGradient.addColorStop(0.5, '#F4A460');
+        rightGradient.addColorStop(1, '#CD853F');
+
+        ctx.fillStyle = rightGradient;
+        ctx.strokeStyle = '#8B4513';
+        ctx.lineWidth = 3;
+
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.width/2, this.height/3, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 오른쪽 살코기 그릴 자국
+        ctx.strokeStyle = 'rgba(139, 69, 19, 0.3)';
+        ctx.lineWidth = 2;
+        for (let i = -this.width/2.5; i < this.width/2.5; i += 20) {
+            ctx.beginPath();
+            ctx.moveTo(i, -this.height/4);
+            ctx.lineTo(i + 8, this.height/4);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // 중앙의 뼈대 (회색 골격)
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+        ctx.shadowBlur = 5;
+
+        // 척추뼈 (더 굵게)
+        ctx.strokeStyle = '#999999';
+        ctx.lineWidth = 6;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-this.width * 0.35, 0);
+        ctx.lineTo(this.width * 0.2, 0);
+        ctx.stroke();
+
+        // 척추뼈 하이라이트
+        ctx.strokeStyle = '#BBBBBB';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(-this.width * 0.35, -2);
+        ctx.lineTo(this.width * 0.2, -2);
+        ctx.stroke();
+
+        // 갈비뼈 (X자 형태)
+        const ribCount = this.difficulty === 'easy' ? 4 : this.difficulty === 'normal' ? 5 : 6;
+        const spineStartX = -this.width * 0.35;
+        const spineEndX = this.width * 0.2;
+        const ribSpacing = (spineEndX - spineStartX) / (ribCount + 1);
+        const ribLength = this.height * 0.35;
+        const ribAngle = Math.PI / 4;
+
+        ctx.strokeStyle = '#999999';
+        ctx.lineWidth = 4;
+
+        for (let i = 0; i < ribCount; i++) {
+            const ribX = spineStartX + (i + 1) * ribSpacing;
+
+            // 위쪽 왼쪽 가지
+            ctx.beginPath();
+            ctx.moveTo(ribX, 0);
+            ctx.lineTo(ribX - ribLength * Math.cos(ribAngle), -ribLength * Math.sin(ribAngle));
+            ctx.stroke();
+
+            // 위쪽 오른쪽 가지
+            ctx.beginPath();
+            ctx.moveTo(ribX, 0);
+            ctx.lineTo(ribX + ribLength * Math.cos(ribAngle), -ribLength * Math.sin(ribAngle));
+            ctx.stroke();
+
+            // 아래쪽 왼쪽 가지
+            ctx.beginPath();
+            ctx.moveTo(ribX, 0);
+            ctx.lineTo(ribX - ribLength * Math.cos(ribAngle), ribLength * Math.sin(ribAngle));
+            ctx.stroke();
+
+            // 아래쪽 오른쪽 가지
+            ctx.beginPath();
+            ctx.moveTo(ribX, 0);
+            ctx.lineTo(ribX + ribLength * Math.cos(ribAngle), ribLength * Math.sin(ribAngle));
+            ctx.stroke();
+
+            // 갈비뼈 하이라이트
+            ctx.strokeStyle = '#BBBBBB';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(ribX, 0);
+            ctx.lineTo(ribX - ribLength * Math.cos(ribAngle) * 0.7, -ribLength * Math.sin(ribAngle) * 0.7);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#999999';
+            ctx.lineWidth = 4;
+        }
+
+        // 머리 부분 (작게)
+        const headGradient = ctx.createLinearGradient(this.width/3, -20, this.width/2.5, 20);
+        headGradient.addColorStop(0, '#CD853F');
+        headGradient.addColorStop(1, '#D2691E');
+
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+        ctx.fillStyle = headGradient;
+        ctx.strokeStyle = '#8B4513';
+        ctx.lineWidth = 3;
+
+        ctx.beginPath();
+        ctx.ellipse(this.width/2.7, 0, 25, 18, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 눈
+        ctx.shadowColor = 'transparent';
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(this.width/2.5, -5, 8, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#2C3E50';
+        ctx.beginPath();
+        ctx.arc(this.width/2.5 + 1, -5, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
     }
 
     /**
      * 생선 그리기
      */
     draw(ctx) {
+        // 모든 가시가 제거되었으면 발라진 상태로 표시
+        if (this.allBonesRemoved()) {
+            this.drawFilletedFish(ctx);
+            return;
+        }
+
         console.log('Drawing fish at:', this.x, this.y);
         ctx.save();
         ctx.translate(this.x, this.y);
@@ -471,9 +708,9 @@ class Fish {
         ctx.shadowOffsetX = 4;
         ctx.shadowOffsetY = 4;
 
-        // 꼬리 지느러미 (먼저 그려서 몸통 뒤에 위치)
-        ctx.fillStyle = '#FF9AA2';
-        ctx.strokeStyle = '#FF6B6B';
+        // 꼬리 지느러미 (먼저 그려서 몸통 뒤에 위치) - 구운 색상
+        ctx.fillStyle = '#D2691E';
+        ctx.strokeStyle = '#8B4513';
         ctx.lineWidth = 3;
 
         ctx.beginPath();
@@ -487,7 +724,7 @@ class Fish {
         ctx.stroke();
 
         // 꼬리 지느러미 디테일 선
-        ctx.strokeStyle = '#FF6B6B';
+        ctx.strokeStyle = '#A0522D';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(-this.width/2 - 10, -15);
@@ -496,14 +733,14 @@ class Fish {
         ctx.lineTo(-this.width/2 - 35, 0);
         ctx.stroke();
 
-        // 생선 몸통 (타원형)
+        // 생선 몸통 (타원형) - 구운 황금빛 갈색
         const gradient = ctx.createLinearGradient(-this.width/2, -this.height/2, this.width/2, this.height/2);
-        gradient.addColorStop(0, '#FFB3BA');
-        gradient.addColorStop(0.5, '#FFCCD5');
-        gradient.addColorStop(1, '#FFB3BA');
+        gradient.addColorStop(0, '#CD853F');
+        gradient.addColorStop(0.5, '#F4A460');
+        gradient.addColorStop(1, '#D2691E');
 
         ctx.fillStyle = gradient;
-        ctx.strokeStyle = '#FF6B6B';
+        ctx.strokeStyle = '#8B4513';
         ctx.lineWidth = 4;
 
         ctx.beginPath();
@@ -511,28 +748,28 @@ class Fish {
         ctx.fill();
         ctx.stroke();
 
-        // 배 부분 (더 밝은 색)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        // 배 부분 (더 밝은 황금색)
+        ctx.fillStyle = 'rgba(255, 228, 181, 0.5)';
         ctx.beginPath();
         ctx.ellipse(0, this.height/6, this.width/2.5, this.height/4, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // 비늘 패턴
-        ctx.strokeStyle = 'rgba(255, 150, 160, 0.3)';
-        ctx.lineWidth = 1.5;
-        for (let i = -this.width/3; i < this.width/3; i += 20) {
-            for (let j = -this.height/4; j < this.height/4; j += 20) {
-                ctx.beginPath();
-                ctx.arc(i, j - 10, 8, 0, Math.PI * 2);
-                ctx.stroke();
-            }
+        // 그릴 자국 (구운 느낌)
+        ctx.strokeStyle = 'rgba(139, 69, 19, 0.4)';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        for (let i = -this.width/2.5; i < this.width/2.5; i += 25) {
+            ctx.beginPath();
+            ctx.moveTo(i, -this.height/2.2);
+            ctx.lineTo(i + 10, this.height/2.2);
+            ctx.stroke();
         }
 
         ctx.shadowColor = 'transparent';
 
-        // 등 지느러미
-        ctx.fillStyle = '#FF9AA2';
-        ctx.strokeStyle = '#FF6B6B';
+        // 등 지느러미 - 구운 색상
+        ctx.fillStyle = '#CD853F';
+        ctx.strokeStyle = '#8B4513';
         ctx.lineWidth = 3;
 
         ctx.beginPath();
@@ -545,7 +782,7 @@ class Fish {
         ctx.fill();
         ctx.stroke();
 
-        // 배 지느러미
+        // 배 지느러미 - 구운 색상
         ctx.beginPath();
         ctx.moveTo(10, this.height/2);
         ctx.lineTo(5, this.height/2 + 15);
@@ -579,16 +816,16 @@ class Fish {
         ctx.arc(eyeX + 4, eyeY - 2, 3, 0, Math.PI * 2);
         ctx.fill();
 
-        // 생선 입 (미소)
-        ctx.strokeStyle = '#FF6B6B';
+        // 생선 입 (미소) - 구운 색상
+        ctx.strokeStyle = '#8B4513';
         ctx.lineWidth = 2.5;
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.arc(this.width/2 - 15, 5, 10, 0.1, Math.PI * 0.8);
         ctx.stroke();
 
-        // 아가미
-        ctx.strokeStyle = '#FF6B6B';
+        // 아가미 - 구운 색상
+        ctx.strokeStyle = '#A0522D';
         ctx.lineWidth = 2;
         for (let i = 0; i < 3; i++) {
             ctx.beginPath();
@@ -601,103 +838,104 @@ class Fish {
 
     /**
      * 가시(뼈) 그리기
+     * 중앙 척추뼈와 X자 갈비뼈를 연결된 구조로 그리기
      */
     drawBones(ctx) {
-        this.bones.forEach(bone => {
-            if (bone.removed) {
-                // 제거된 가시는 큰 체크 마크로 표시
-                if (bone.marked) {
-                    ctx.save();
+        ctx.save();
 
-                    // 배경 원
-                    ctx.fillStyle = 'rgba(76, 175, 80, 0.2)';
-                    ctx.beginPath();
-                    ctx.arc(bone.x, bone.y, 15, 0, Math.PI * 2);
-                    ctx.fill();
+        // 제거되지 않은 뼈만 그리기
+        const activeBones = this.bones.filter(bone => !bone.removed);
 
-                    // 체크 마크
-                    ctx.strokeStyle = '#4CAF50';
-                    ctx.lineWidth = 4;
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                    ctx.beginPath();
-                    ctx.moveTo(bone.x - 8, bone.y);
-                    ctx.lineTo(bone.x - 2, bone.y + 8);
-                    ctx.lineTo(bone.x + 10, bone.y - 8);
-                    ctx.stroke();
+        if (activeBones.length === 0) return;
 
-                    ctx.restore();
+        // 그림자 효과
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)';
+        ctx.shadowBlur = 3;
+        ctx.shadowOffsetX = 2;
+        ctx.shadowOffsetY = 2;
+
+        // 척추뼈 그리기 (더 굵게)
+        const spineBones = activeBones.filter(bone => bone.type === 'spine');
+        if (spineBones.length > 0) {
+            ctx.strokeStyle = '#999999';
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            ctx.beginPath();
+            spineBones.forEach((bone, index) => {
+                if (index === 0) {
+                    ctx.moveTo(bone.startX, bone.startY);
                 }
-            } else {
-                // 가시 그리기 (더 눈에 잘 띄게)
-                ctx.save();
+                ctx.lineTo(bone.endX, bone.endY);
+            });
+            ctx.stroke();
 
-                // 가시 배경 (강조용)
-                ctx.fillStyle = 'rgba(255, 107, 107, 0.15)';
-                ctx.beginPath();
-                ctx.arc(bone.x, bone.y, bone.radius + 8, 0, Math.PI * 2);
-                ctx.fill();
+            // 척추뼈 하이라이트 (입체감)
+            ctx.strokeStyle = '#BBBBBB';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            spineBones.forEach((bone, index) => {
+                if (index === 0) {
+                    ctx.moveTo(bone.startX, bone.startY - 1);
+                }
+                ctx.lineTo(bone.endX, bone.endY - 1);
+            });
+            ctx.stroke();
+        }
 
-                // 가시 몸통 (흰색 뼈 모양)
-                ctx.strokeStyle = '#FFFFFF';
-                ctx.lineWidth = 5;
-                ctx.lineCap = 'round';
-                ctx.beginPath();
-                ctx.moveTo(bone.x, bone.y - 15);
-                ctx.lineTo(bone.x, bone.y + 15);
-                ctx.stroke();
+        // 갈비뼈 그리기
+        const ribBones = activeBones.filter(bone => bone.type === 'rib');
+        ctx.strokeStyle = '#AAAAAA';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
 
-                // 가시 옆가지 (더 길고 명확하게)
-                ctx.lineWidth = 4;
-                ctx.beginPath();
-                ctx.moveTo(bone.x - 8, bone.y - 8);
-                ctx.lineTo(bone.x + 8, bone.y - 8);
-                ctx.stroke();
+        ribBones.forEach(bone => {
+            ctx.beginPath();
+            ctx.moveTo(bone.startX, bone.startY);
+            ctx.lineTo(bone.endX, bone.endY);
+            ctx.stroke();
 
-                ctx.beginPath();
-                ctx.moveTo(bone.x - 8, bone.y);
-                ctx.lineTo(bone.x + 8, bone.y);
-                ctx.stroke();
+            // 갈비뼈 하이라이트
+            ctx.strokeStyle = '#CCCCCC';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(bone.startX, bone.startY);
+            const midX = (bone.startX + bone.endX) / 2;
+            const midY = (bone.startY + bone.endY) / 2;
+            ctx.lineTo(midX, midY);
+            ctx.stroke();
 
-                ctx.beginPath();
-                ctx.moveTo(bone.x - 8, bone.y + 8);
-                ctx.lineTo(bone.x + 8, bone.y + 8);
-                ctx.stroke();
-
-                // 가시 위치 표시 (빨간 원 - 더 크게)
-                ctx.shadowColor = 'rgba(255, 71, 87, 0.4)';
-                ctx.shadowBlur = 8;
-
-                ctx.fillStyle = '#FF4757';
-                ctx.strokeStyle = '#DC143C';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.arc(bone.x, bone.y, bone.radius + 2, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-
-                ctx.shadowColor = 'transparent';
-
-                // 내부 하이라이트
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                ctx.beginPath();
-                ctx.arc(bone.x - 3, bone.y - 3, 4, 0, Math.PI * 2);
-                ctx.fill();
-
-                // 경고 텍스트 (선택적)
-                ctx.fillStyle = '#FFFFFF';
-                ctx.font = 'bold 12px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('!', bone.x, bone.y);
-
-                ctx.restore();
-            }
+            ctx.strokeStyle = '#AAAAAA';
+            ctx.lineWidth = 3;
         });
+
+        ctx.shadowColor = 'transparent';
+
+        // 제거된 뼈 위치에 체크 마크 표시
+        const removedBones = this.bones.filter(bone => bone.removed);
+        removedBones.forEach(bone => {
+            const centerX = (bone.startX + bone.endX) / 2;
+            const centerY = (bone.startY + bone.endY) / 2;
+
+            // 작은 체크 마크
+            ctx.strokeStyle = '#4CAF50';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.beginPath();
+            ctx.moveTo(centerX - 5, centerY);
+            ctx.lineTo(centerX - 2, centerY + 3);
+            ctx.lineTo(centerX + 5, centerY - 4);
+            ctx.stroke();
+        });
+
+        ctx.restore();
     }
 
     /**
      * 특정 위치에 가시가 있는지 확인하고 제거
+     * 선분과 점 사이의 거리를 계산하여 제거
      * @param {number} x - x 좌표
      * @param {number} y - y 좌표
      * @returns {boolean} - 가시를 제거했는지 여부
@@ -705,19 +943,59 @@ class Fish {
     checkBoneRemoval(x, y) {
         for (let bone of this.bones) {
             if (!bone.removed) {
-                const distance = Math.sqrt(
-                    Math.pow(x - bone.x, 2) + Math.pow(y - bone.y, 2)
+                // 점과 선분 사이의 거리 계산
+                const distance = this.pointToLineDistance(
+                    x, y,
+                    bone.startX, bone.startY,
+                    bone.endX, bone.endY
                 );
 
-                // 가시의 범위 내에 있으면 제거
-                if (distance < bone.radius + 5) {
+                // 척추뼈는 더 넓은 범위, 갈비뼈는 좁은 범위
+                const threshold = bone.type === 'spine' ? 8 : 6;
+
+                if (distance < threshold) {
                     bone.removed = true;
-                    bone.marked = true;
                     return true;
                 }
             }
         }
         return false;
+    }
+
+    /**
+     * 점과 선분 사이의 최단 거리 계산
+     */
+    pointToLineDistance(px, py, x1, y1, x2, y2) {
+        const A = px - x1;
+        const B = py - y1;
+        const C = x2 - x1;
+        const D = y2 - y1;
+
+        const dot = A * C + B * D;
+        const lenSq = C * C + D * D;
+        let param = -1;
+
+        if (lenSq !== 0) {
+            param = dot / lenSq;
+        }
+
+        let xx, yy;
+
+        if (param < 0) {
+            xx = x1;
+            yy = y1;
+        } else if (param > 1) {
+            xx = x2;
+            yy = y2;
+        } else {
+            xx = x1 + param * C;
+            yy = y1 + param * D;
+        }
+
+        const dx = px - xx;
+        const dy = py - yy;
+
+        return Math.sqrt(dx * dx + dy * dy);
     }
 
     /**
