@@ -173,7 +173,7 @@ h2 {
     border: 2px solid #e0e0e0;
     border-radius: 10px;
     background: white;
-    cursor: crosshair;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><defs><filter id="shadow"><feDropShadow dx="1" dy="1" stdDeviation="1" flood-opacity="0.3"/></filter></defs><g filter="url(%23shadow)"><path d="M2 2 L8 28 L12 24 L18 30 L22 26 L16 20 L30 14 Z" fill="%23C0C0C0" stroke="%23666" stroke-width="1"/><path d="M2 2 L8 28 L12 24 L18 30 L22 26 L16 20 L30 14 Z" fill="url(%23blade)" stroke="%23888" stroke-width="0.5"/><defs><linearGradient id="blade" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23E8E8E8"/><stop offset="50%" style="stop-color:%23FFFFFF"/><stop offset="100%" style="stop-color:%23C0C0C0"/></linearGradient></defs><ellipse cx="28" cy="16" rx="3" ry="2" fill="%23A0A0A0"/></g></svg>') 2 2, auto;
 }
 
 .game-hint {
@@ -443,16 +443,28 @@ class Fish {
         const spacing = this.width / (this.boneCount + 1);
 
         for (let i = 0; i < this.boneCount; i++) {
-            // 생선 중앙선을 따라 배치하되, 약간의 랜덤성 추가
-            const x = this.x - this.width/2 + spacing * (i + 1);
-            const y = this.y + (Math.random() - 0.5) * (this.height * 0.4);
+            // 생선 중앙선을 따라 배치하되, x, y 모두 랜덤성 추가
+            const baseX = this.x - this.width/2 + spacing * (i + 1);
+            const randomOffsetX = (Math.random() - 0.5) * spacing * 0.6; // x축 랜덤 범위 확대
+            const x = baseX + randomOffsetX;
+
+            // y축도 더 넓은 범위로 랜덤 배치
+            const y = this.y + (Math.random() - 0.5) * (this.height * 0.6);
+
+            // 가시의 각도도 랜덤하게 (0~360도)
+            const angle = Math.random() * Math.PI * 2;
+
+            // 가시 길이도 약간 랜덤하게
+            const length = 20 + Math.random() * 10;
 
             this.bones.push({
                 x: x,
                 y: y,
-                radius: 8,
+                angle: angle,
+                length: length,
+                radius: 12, // 클릭 감지 범위
                 removed: false,
-                marked: false // 체크 마크 표시용
+                marked: false
             });
         }
     }
@@ -612,86 +624,102 @@ class Fish {
                     // 배경 원
                     ctx.fillStyle = 'rgba(76, 175, 80, 0.2)';
                     ctx.beginPath();
-                    ctx.arc(bone.x, bone.y, 15, 0, Math.PI * 2);
+                    ctx.arc(bone.x, bone.y, 18, 0, Math.PI * 2);
                     ctx.fill();
 
                     // 체크 마크
                     ctx.strokeStyle = '#4CAF50';
-                    ctx.lineWidth = 4;
+                    ctx.lineWidth = 5;
                     ctx.lineCap = 'round';
                     ctx.lineJoin = 'round';
                     ctx.beginPath();
-                    ctx.moveTo(bone.x - 8, bone.y);
-                    ctx.lineTo(bone.x - 2, bone.y + 8);
-                    ctx.lineTo(bone.x + 10, bone.y - 8);
+                    ctx.moveTo(bone.x - 10, bone.y);
+                    ctx.lineTo(bone.x - 3, bone.y + 10);
+                    ctx.lineTo(bone.x + 12, bone.y - 10);
                     ctx.stroke();
 
                     ctx.restore();
                 }
             } else {
-                // 가시 그리기 (더 눈에 잘 띄게)
+                // 진짜 생선 가시처럼 그리기
                 ctx.save();
+                ctx.translate(bone.x, bone.y);
+                ctx.rotate(bone.angle);
 
-                // 가시 배경 (강조용)
-                ctx.fillStyle = 'rgba(255, 107, 107, 0.15)';
-                ctx.beginPath();
-                ctx.arc(bone.x, bone.y, bone.radius + 8, 0, Math.PI * 2);
-                ctx.fill();
+                // 그림자 효과
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                ctx.shadowBlur = 4;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
 
-                // 가시 몸통 (흰색 뼈 모양)
-                ctx.strokeStyle = '#FFFFFF';
-                ctx.lineWidth = 5;
+                // 가시 중심 뼈대 (굵은 부분)
+                const gradient = ctx.createLinearGradient(0, -bone.length/2, 0, bone.length/2);
+                gradient.addColorStop(0, '#F0F0F0');
+                gradient.addColorStop(0.3, '#FFFFFF');
+                gradient.addColorStop(0.7, '#E0E0E0');
+                gradient.addColorStop(1, '#D0D0D0');
+
+                ctx.fillStyle = gradient;
+                ctx.strokeStyle = '#A0A0A0';
+                ctx.lineWidth = 2;
                 ctx.lineCap = 'round';
-                ctx.beginPath();
-                ctx.moveTo(bone.x, bone.y - 15);
-                ctx.lineTo(bone.x, bone.y + 15);
-                ctx.stroke();
+                ctx.lineJoin = 'miter';
 
-                // 가시 옆가지 (더 길고 명확하게)
-                ctx.lineWidth = 4;
+                // 뾰족한 뼈 모양 (삼각형 + 선)
                 ctx.beginPath();
-                ctx.moveTo(bone.x - 8, bone.y - 8);
-                ctx.lineTo(bone.x + 8, bone.y - 8);
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(bone.x - 8, bone.y);
-                ctx.lineTo(bone.x + 8, bone.y);
-                ctx.stroke();
-
-                ctx.beginPath();
-                ctx.moveTo(bone.x - 8, bone.y + 8);
-                ctx.lineTo(bone.x + 8, bone.y + 8);
-                ctx.stroke();
-
-                // 가시 위치 표시 (빨간 원 - 더 크게)
-                ctx.shadowColor = 'rgba(255, 71, 87, 0.4)';
-                ctx.shadowBlur = 8;
-
-                ctx.fillStyle = '#FF4757';
-                ctx.strokeStyle = '#DC143C';
-                ctx.lineWidth = 3;
-                ctx.beginPath();
-                ctx.arc(bone.x, bone.y, bone.radius + 2, 0, Math.PI * 2);
+                // 상단 뾰족한 끝
+                ctx.moveTo(0, -bone.length/2);
+                ctx.lineTo(-3, -bone.length/2 + 8);
+                ctx.lineTo(-2, 0);
+                ctx.lineTo(-3, bone.length/2 - 8);
+                ctx.lineTo(0, bone.length/2);
+                // 하단에서 반대편으로
+                ctx.lineTo(3, bone.length/2 - 8);
+                ctx.lineTo(2, 0);
+                ctx.lineTo(3, -bone.length/2 + 8);
+                ctx.closePath();
                 ctx.fill();
                 ctx.stroke();
 
                 ctx.shadowColor = 'transparent';
 
-                // 내부 하이라이트
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-                ctx.beginPath();
-                ctx.arc(bone.x - 3, bone.y - 3, 4, 0, Math.PI * 2);
-                ctx.fill();
+                // 가시 옆가지들 (작은 뾰족한 가지)
+                ctx.strokeStyle = '#B0B0B0';
+                ctx.lineWidth = 1.5;
 
-                // 경고 텍스트 (선택적)
-                ctx.fillStyle = '#FFFFFF';
-                ctx.font = 'bold 12px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText('!', bone.x, bone.y);
+                // 왼쪽 가지들
+                for (let i = 0; i < 3; i++) {
+                    const yPos = -bone.length/2 + 10 + i * 8;
+                    ctx.beginPath();
+                    ctx.moveTo(-2, yPos);
+                    ctx.lineTo(-6, yPos - 4);
+                    ctx.stroke();
+                }
+
+                // 오른쪽 가지들
+                for (let i = 0; i < 3; i++) {
+                    const yPos = -bone.length/2 + 10 + i * 8;
+                    ctx.beginPath();
+                    ctx.moveTo(2, yPos);
+                    ctx.lineTo(6, yPos - 4);
+                    ctx.stroke();
+                }
+
+                // 중심선 디테일
+                ctx.strokeStyle = '#C0C0C0';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(0, -bone.length/2 + 5);
+                ctx.lineTo(0, bone.length/2 - 5);
+                ctx.stroke();
 
                 ctx.restore();
+
+                // 클릭 영역 표시 (반투명 원형 - 디버그용, 나중에 제거 가능)
+                // ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
+                // ctx.beginPath();
+                // ctx.arc(bone.x, bone.y, bone.radius, 0, Math.PI * 2);
+                // ctx.fill();
             }
         });
     }
