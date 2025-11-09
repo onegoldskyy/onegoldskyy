@@ -441,9 +441,9 @@ class Fish {
     generateBones() {
         this.bones = [];
 
-        // 난이도에 따른 갈비뼈 개수 (척추뼈 양쪽에 배치)
-        const ribCount = this.difficulty === 'easy' ? 4 :
-                         this.difficulty === 'normal' ? 5 : 6;
+        // 난이도에 따른 가시 개수
+        const boneCount = this.difficulty === 'easy' ? 3 :
+                         this.difficulty === 'normal' ? 4 : 4;
 
         // 척추뼈 생성 (중앙 수평선을 여러 세그먼트로)
         const spineSegments = 8;
@@ -463,51 +463,48 @@ class Fish {
             });
         }
 
-        // 갈비뼈 생성 (X자 형태)
-        const ribSpacing = (spineEndX - spineStartX) / (ribCount + 1);
-        const ribLength = this.height * 0.35;
-        const ribAngle = Math.PI / 4; // 45도
+        // 척추뼈의 길이를 기준으로 가시 배치 위치 계산
+        const spineLength = spineEndX - spineStartX;
+        const boneSpacing = spineLength / (boneCount + 1);
 
-        for (let i = 0; i < ribCount; i++) {
-            const ribX = spineStartX + (i + 1) * ribSpacing;
+        // 기본 가시 길이 (척추에서 멀수록 짧아짐)
+        const baseRibLength = this.height * 0.35;
 
-            // 위쪽으로 뻗는 갈비뼈 (왼쪽)
+        // 각도 범위 (50도 ~ 60도, 라디안으로)
+        const minAngle = (50 * Math.PI) / 180;
+        const maxAngle = (60 * Math.PI) / 180;
+        const angleStep = (maxAngle - minAngle) / (boneCount - 1);
+
+        // 왼쪽 위 가시들 (척추뼈 왼쪽에서 위쪽으로)
+        for (let i = 0; i < boneCount; i++) {
+            const boneX = spineStartX + (i + 1) * boneSpacing;
+            const angle = minAngle + angleStep * i; // 각도를 조금씩 다르게
+            const lengthMultiplier = 1.0 - (i * 0.15); // 척추에서 멀수록 짧아짐
+            const ribLength = baseRibLength * lengthMultiplier;
+
             this.bones.push({
-                type: 'rib',
-                startX: ribX,
+                type: 'rib-left',
+                startX: boneX,
                 startY: spineY,
-                endX: ribX - ribLength * Math.cos(ribAngle),
-                endY: spineY - ribLength * Math.sin(ribAngle),
+                endX: boneX - ribLength * Math.cos(angle),
+                endY: spineY - ribLength * Math.sin(angle),
                 removed: false
             });
+        }
 
-            // 위쪽으로 뻗는 갈비뼈 (오른쪽)
-            this.bones.push({
-                type: 'rib',
-                startX: ribX,
-                startY: spineY,
-                endX: ribX + ribLength * Math.cos(ribAngle),
-                endY: spineY - ribLength * Math.sin(ribAngle),
-                removed: false
-            });
+        // 오른쪽 아래 가시들 (척추뼈 오른쪽에서 아래쪽으로)
+        for (let i = 0; i < boneCount; i++) {
+            const boneX = spineStartX + (i + 1) * boneSpacing;
+            const angle = minAngle + angleStep * i; // 각도를 조금씩 다르게
+            const lengthMultiplier = 1.0 - (i * 0.15); // 척추에서 멀수록 짧아짐
+            const ribLength = baseRibLength * lengthMultiplier;
 
-            // 아래쪽으로 뻗는 갈비뼈 (왼쪽)
             this.bones.push({
-                type: 'rib',
-                startX: ribX,
+                type: 'rib-right',
+                startX: boneX,
                 startY: spineY,
-                endX: ribX - ribLength * Math.cos(ribAngle),
-                endY: spineY + ribLength * Math.sin(ribAngle),
-                removed: false
-            });
-
-            // 아래쪽으로 뻗는 갈비뼈 (오른쪽)
-            this.bones.push({
-                type: 'rib',
-                startX: ribX,
-                startY: spineY,
-                endX: ribX + ribLength * Math.cos(ribAngle),
-                endY: spineY + ribLength * Math.sin(ribAngle),
+                endX: boneX + ribLength * Math.cos(angle),
+                endY: spineY + ribLength * Math.sin(angle),
                 removed: false
             });
         }
@@ -515,6 +512,7 @@ class Fish {
 
     /**
      * 깨끗하게 발라진 생선 그리기 (모든 가시 제거 완료 시)
+     * 뼈대 없이 깨끗한 구운 생선 몸통만 표시
      */
     drawFilletedFish(ctx) {
         ctx.save();
@@ -526,164 +524,159 @@ class Fish {
         ctx.shadowOffsetX = 4;
         ctx.shadowOffsetY = 4;
 
-        // 왼쪽 살코기 (위쪽으로 분리)
-        ctx.save();
-        ctx.translate(0, -this.height * 0.35);
-
-        const leftGradient = ctx.createLinearGradient(-this.width/2, -this.height/3, this.width/2, this.height/3);
-        leftGradient.addColorStop(0, '#CD853F');
-        leftGradient.addColorStop(0.5, '#F4A460');
-        leftGradient.addColorStop(1, '#D2691E');
-
-        ctx.fillStyle = leftGradient;
+        // 꼬리 지느러미 - 구운 색상
+        ctx.fillStyle = '#D2691E';
         ctx.strokeStyle = '#8B4513';
         ctx.lineWidth = 3;
 
         ctx.beginPath();
-        ctx.ellipse(0, 0, this.width/2, this.height/3, 0, 0, Math.PI * 2);
+        ctx.moveTo(-this.width/2, -15);
+        ctx.lineTo(-this.width/2 - 40, -35);
+        ctx.lineTo(-this.width/2 - 35, 0);
+        ctx.lineTo(-this.width/2 - 40, 35);
+        ctx.lineTo(-this.width/2, 15);
+        ctx.closePath();
         ctx.fill();
         ctx.stroke();
 
-        // 왼쪽 살코기 그릴 자국
-        ctx.strokeStyle = 'rgba(139, 69, 19, 0.3)';
+        // 꼬리 지느러미 디테일 선
+        ctx.strokeStyle = '#A0522D';
         ctx.lineWidth = 2;
-        for (let i = -this.width/2.5; i < this.width/2.5; i += 20) {
-            ctx.beginPath();
-            ctx.moveTo(i, -this.height/4);
-            ctx.lineTo(i + 8, this.height/4);
-            ctx.stroke();
-        }
-        ctx.restore();
+        ctx.beginPath();
+        ctx.moveTo(-this.width/2 - 10, -15);
+        ctx.lineTo(-this.width/2 - 35, 0);
+        ctx.moveTo(-this.width/2 - 10, 15);
+        ctx.lineTo(-this.width/2 - 35, 0);
+        ctx.stroke();
 
-        // 오른쪽 살코기 (아래쪽으로 분리)
-        ctx.save();
-        ctx.translate(0, this.height * 0.35);
+        // 생선 몸통 (타원형) - 구운 황금빛 갈색
+        const gradient = ctx.createLinearGradient(-this.width/2, -this.height/2, this.width/2, this.height/2);
+        gradient.addColorStop(0, '#CD853F');
+        gradient.addColorStop(0.5, '#F4A460');
+        gradient.addColorStop(1, '#D2691E');
 
-        const rightGradient = ctx.createLinearGradient(-this.width/2, -this.height/3, this.width/2, this.height/3);
-        rightGradient.addColorStop(0, '#D2691E');
-        rightGradient.addColorStop(0.5, '#F4A460');
-        rightGradient.addColorStop(1, '#CD853F');
-
-        ctx.fillStyle = rightGradient;
+        ctx.fillStyle = gradient;
         ctx.strokeStyle = '#8B4513';
-        ctx.lineWidth = 3;
-
-        ctx.beginPath();
-        ctx.ellipse(0, 0, this.width/2, this.height/3, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-
-        // 오른쪽 살코기 그릴 자국
-        ctx.strokeStyle = 'rgba(139, 69, 19, 0.3)';
-        ctx.lineWidth = 2;
-        for (let i = -this.width/2.5; i < this.width/2.5; i += 20) {
-            ctx.beginPath();
-            ctx.moveTo(i, -this.height/4);
-            ctx.lineTo(i + 8, this.height/4);
-            ctx.stroke();
-        }
-        ctx.restore();
-
-        // 중앙의 뼈대 (회색 골격)
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
-        ctx.shadowBlur = 5;
-
-        // 척추뼈 (더 굵게)
-        ctx.strokeStyle = '#999999';
-        ctx.lineWidth = 6;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(-this.width * 0.35, 0);
-        ctx.lineTo(this.width * 0.2, 0);
-        ctx.stroke();
-
-        // 척추뼈 하이라이트
-        ctx.strokeStyle = '#BBBBBB';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.moveTo(-this.width * 0.35, -2);
-        ctx.lineTo(this.width * 0.2, -2);
-        ctx.stroke();
-
-        // 갈비뼈 (X자 형태)
-        const ribCount = this.difficulty === 'easy' ? 4 : this.difficulty === 'normal' ? 5 : 6;
-        const spineStartX = -this.width * 0.35;
-        const spineEndX = this.width * 0.2;
-        const ribSpacing = (spineEndX - spineStartX) / (ribCount + 1);
-        const ribLength = this.height * 0.35;
-        const ribAngle = Math.PI / 4;
-
-        ctx.strokeStyle = '#999999';
         ctx.lineWidth = 4;
 
-        for (let i = 0; i < ribCount; i++) {
-            const ribX = spineStartX + (i + 1) * ribSpacing;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.width/2, this.height/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
 
-            // 위쪽 왼쪽 가지
+        // 배 부분 (더 밝은 황금색)
+        ctx.fillStyle = 'rgba(255, 228, 181, 0.5)';
+        ctx.beginPath();
+        ctx.ellipse(0, this.height/6, this.width/2.5, this.height/4, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 그릴 자국 (구운 느낌)
+        ctx.strokeStyle = 'rgba(139, 69, 19, 0.4)';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        for (let i = -this.width/2.5; i < this.width/2.5; i += 25) {
             ctx.beginPath();
-            ctx.moveTo(ribX, 0);
-            ctx.lineTo(ribX - ribLength * Math.cos(ribAngle), -ribLength * Math.sin(ribAngle));
+            ctx.moveTo(i, -this.height/2.2);
+            ctx.lineTo(i + 10, this.height/2.2);
             ctx.stroke();
-
-            // 위쪽 오른쪽 가지
-            ctx.beginPath();
-            ctx.moveTo(ribX, 0);
-            ctx.lineTo(ribX + ribLength * Math.cos(ribAngle), -ribLength * Math.sin(ribAngle));
-            ctx.stroke();
-
-            // 아래쪽 왼쪽 가지
-            ctx.beginPath();
-            ctx.moveTo(ribX, 0);
-            ctx.lineTo(ribX - ribLength * Math.cos(ribAngle), ribLength * Math.sin(ribAngle));
-            ctx.stroke();
-
-            // 아래쪽 오른쪽 가지
-            ctx.beginPath();
-            ctx.moveTo(ribX, 0);
-            ctx.lineTo(ribX + ribLength * Math.cos(ribAngle), ribLength * Math.sin(ribAngle));
-            ctx.stroke();
-
-            // 갈비뼈 하이라이트
-            ctx.strokeStyle = '#BBBBBB';
-            ctx.lineWidth = 1.5;
-            ctx.beginPath();
-            ctx.moveTo(ribX, 0);
-            ctx.lineTo(ribX - ribLength * Math.cos(ribAngle) * 0.7, -ribLength * Math.sin(ribAngle) * 0.7);
-            ctx.stroke();
-
-            ctx.strokeStyle = '#999999';
-            ctx.lineWidth = 4;
         }
 
-        // 머리 부분 (작게)
-        const headGradient = ctx.createLinearGradient(this.width/3, -20, this.width/2.5, 20);
-        headGradient.addColorStop(0, '#CD853F');
-        headGradient.addColorStop(1, '#D2691E');
+        ctx.shadowColor = 'transparent';
 
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
-        ctx.fillStyle = headGradient;
+        // 등 지느러미 - 구운 색상
+        ctx.fillStyle = '#CD853F';
         ctx.strokeStyle = '#8B4513';
         ctx.lineWidth = 3;
 
         ctx.beginPath();
-        ctx.ellipse(this.width/2.7, 0, 25, 18, 0, 0, Math.PI * 2);
+        ctx.moveTo(-30, -this.height/2);
+        ctx.lineTo(-20, -this.height/2 - 25);
+        ctx.lineTo(0, -this.height/2 - 30);
+        ctx.lineTo(20, -this.height/2 - 25);
+        ctx.lineTo(30, -this.height/2);
+        ctx.closePath();
         ctx.fill();
         ctx.stroke();
 
-        // 눈
-        ctx.shadowColor = 'transparent';
+        // 배 지느러미 - 구운 색상
+        ctx.beginPath();
+        ctx.moveTo(10, this.height/2);
+        ctx.lineTo(5, this.height/2 + 15);
+        ctx.lineTo(20, this.height/2 + 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 생선 눈
+        const eyeX = this.width/3;
+        const eyeY = -this.height/5;
+
+        // 눈 흰자
         ctx.fillStyle = 'white';
         ctx.strokeStyle = '#333';
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(this.width/2.5, -5, 8, 0, Math.PI * 2);
+        ctx.arc(eyeX, eyeY, 14, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
 
+        // 눈동자
         ctx.fillStyle = '#2C3E50';
         ctx.beginPath();
-        ctx.arc(this.width/2.5 + 1, -5, 4, 0, Math.PI * 2);
+        ctx.arc(eyeX + 2, eyeY, 7, 0, Math.PI * 2);
         ctx.fill();
+
+        // 눈 하이라이트
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(eyeX + 4, eyeY - 2, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 생선 입 (미소) - 구운 색상
+        ctx.strokeStyle = '#8B4513';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(this.width/2 - 15, 5, 10, 0.1, Math.PI * 0.8);
+        ctx.stroke();
+
+        // 아가미 - 구운 색상
+        ctx.strokeStyle = '#A0522D';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.arc(this.width/6 - i * 8, 0, 25, Math.PI * 0.6, Math.PI * 1.4);
+            ctx.stroke();
+        }
+
+        // 성공 표시 (반짝이는 별 효과)
+        ctx.save();
+        ctx.shadowColor = 'rgba(255, 215, 0, 0.8)';
+        ctx.shadowBlur = 10;
+
+        // 별 3개 그리기
+        const stars = [
+            {x: -this.width/3, y: -this.height/2 - 50, size: 20},
+            {x: 0, y: -this.height/2 - 60, size: 25},
+            {x: this.width/3, y: -this.height/2 - 50, size: 20}
+        ];
+
+        stars.forEach(star => {
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath();
+            for (let i = 0; i < 5; i++) {
+                const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+                const radius = i % 2 === 0 ? star.size : star.size / 2;
+                const x = star.x + Math.cos(angle) * radius;
+                const y = star.y + Math.sin(angle) * radius;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.fill();
+        });
+
+        ctx.restore();
 
         ctx.restore();
     }
@@ -884,8 +877,8 @@ class Fish {
             ctx.stroke();
         }
 
-        // 갈비뼈 그리기
-        const ribBones = activeBones.filter(bone => bone.type === 'rib');
+        // 가시 그리기 (왼쪽 위 + 오른쪽 아래)
+        const ribBones = activeBones.filter(bone => bone.type === 'rib-left' || bone.type === 'rib-right');
         ctx.strokeStyle = '#AAAAAA';
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
@@ -896,7 +889,7 @@ class Fish {
             ctx.lineTo(bone.endX, bone.endY);
             ctx.stroke();
 
-            // 갈비뼈 하이라이트
+            // 가시 하이라이트
             ctx.strokeStyle = '#CCCCCC';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
