@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>생선 바르기 게임</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 메인 화면 -->
+    <div id="main-screen" class="screen active">
+        <div class="container">
+            <h1>🐟 생선 바르기 게임</h1>
+            <div class="difficulty-selection">
+                <button class="difficulty-btn" data-difficulty="easy">쉬움</button>
+                <button class="difficulty-btn selected" data-difficulty="normal">보통</button>
+                <button class="difficulty-btn" data-difficulty="hard">어려움</button>
+            </div>
+            <button id="start-btn" class="main-btn">게임 시작</button>
+            <button id="records-btn" class="main-btn">최고 기록</button>
+        </div>
+    </div>
+
+    <!-- 게임 화면 -->
+    <div id="game-screen" class="screen">
+        <div class="game-header">
+            <div class="stat">
+                <span class="label">점수:</span>
+                <span id="score">0</span>
+            </div>
+            <div class="stat">
+                <span class="label">시간:</span>
+                <span id="timer">--</span>
+            </div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+            <span class="progress-text" id="progress-text">0/0</span>
+        </div>
+        <div class="canvas-container">
+            <canvas id="game-canvas"></canvas>
+        </div>
+        <div class="game-hint">
+            💡 가시를 칼로 그어 제거하세요!
+        </div>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div id="result-screen" class="screen">
+        <div class="container">
+            <h2>🎉 완료! 🎉</h2>
+            <div class="stars" id="stars"></div>
+            <div class="result-stats">
+                <div class="result-stat">
+                    <span class="result-label">최종 점수:</span>
+                    <span class="result-value" id="final-score">0</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-label">정확도:</span>
+                    <span class="result-value" id="accuracy">0%</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-label">소요 시간:</span>
+                    <span class="result-value" id="time-taken">0초</span>
+                </div>
+            </div>
+            <div class="result-buttons">
+                <button id="retry-btn" class="main-btn">다시하기</button>
+                <button id="home-btn" class="main-btn">메인으로</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 최고 기록 화면 -->
+    <div id="records-screen" class="screen">
+        <div class="container">
+            <h2>🏆 최고 기록</h2>
+            <div id="records-list">
+                <!-- 기록이 여기에 표시됩니다 -->
+            </div>
+            <button id="records-back-btn" class="main-btn">돌아가기</button>
+        </div>
+    </div>
+
+    <script src="js/fish.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
