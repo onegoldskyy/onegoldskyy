@@ -59,6 +59,7 @@ class Fish {
      * 생선 그리기
      */
     draw(ctx) {
+        console.log('Drawing fish at:', this.x, this.y);
         ctx.save();
         ctx.translate(this.x, this.y);
 

@@ -47,8 +47,12 @@ class FishFilletingGame {
         const maxWidth = 600;
         const maxHeight = 400;
 
-        this.canvas.width = Math.min(maxWidth, container.clientWidth - 40);
+        // 컨테이너 크기를 가져오되, 최소값 보장
+        const containerWidth = container.clientWidth || 640;
+        this.canvas.width = Math.min(maxWidth, Math.max(400, containerWidth - 40));
         this.canvas.height = maxHeight;
+
+        console.log('Canvas size:', this.canvas.width, 'x', this.canvas.height);
     }
 
     /**
@@ -127,30 +131,39 @@ class FishFilletingGame {
                 break;
         }
 
-        // 게임 상태 초기화
-        this.gameState = 'playing';
-        this.score = 0;
-        this.totalCuts = 0;
-        this.accurateCuts = 0;
-        this.remainingTime = this.timeLimit;
-        this.startTime = Date.now();
-
-        // 생선 생성
-        this.fish = new Fish(this.canvas.width, this.canvas.height, this.difficulty);
-
-        // UI 업데이트
+        // UI 화면 먼저 전환 (캔버스가 보이도록)
         this.ui.showScreen('game');
-        this.ui.updateScore(this.score);
-        this.ui.updateTimer(this.remainingTime);
-        this.ui.updateProgress(0, this.fish.getTotalCount());
 
-        // 타이머 시작
-        if (this.timeLimit !== null) {
-            this.startTimer();
-        }
+        // 캔버스 크기 재설정 (화면이 보이는 상태에서)
+        setTimeout(() => {
+            this.setupCanvas();
 
-        // 렌더링 시작
-        this.render();
+            // 게임 상태 초기화
+            this.gameState = 'playing';
+            this.score = 0;
+            this.totalCuts = 0;
+            this.accurateCuts = 0;
+            this.remainingTime = this.timeLimit;
+            this.startTime = Date.now();
+
+            // 생선 생성
+            this.fish = new Fish(this.canvas.width, this.canvas.height, this.difficulty);
+            console.log('Fish created at:', this.fish.x, this.fish.y, 'Size:', this.fish.width, this.fish.height);
+            console.log('Bones:', this.fish.bones.length);
+
+            // UI 업데이트
+            this.ui.updateScore(this.score);
+            this.ui.updateTimer(this.remainingTime);
+            this.ui.updateProgress(0, this.fish.getTotalCount());
+
+            // 타이머 시작
+            if (this.timeLimit !== null) {
+                this.startTimer();
+            }
+
+            // 렌더링 시작
+            this.render();
+        }, 50); // 화면 전환 후 약간의 딜레이
     }
 
     /**
@@ -340,12 +353,18 @@ class FishFilletingGame {
         // 캔버스 클리어
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        if (this.gameState !== 'playing') return;
+        if (this.gameState !== 'playing') {
+            console.log('Not rendering, gameState:', this.gameState);
+            return;
+        }
 
         // 생선 그리기
         if (this.fish) {
+            console.log('Rendering fish and bones');
             this.fish.draw(this.ctx);
             this.fish.drawBones(this.ctx);
+        } else {
+            console.log('No fish to render!');
         }
 
         // 드래그 경로 그리기
