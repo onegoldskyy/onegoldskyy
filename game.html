@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>생선 바르기 게임</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #333;
+}
+
+/* 화면 전환 */
+.screen {
+    display: none;
+    width: 100%;
+    max-width: 800px;
+    margin: 20px;
+}
+
+.screen.active {
+    display: block;
+}
+
+.container {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+/* 메인 화면 */
+h1 {
+    font-size: 2.5em;
+    margin-bottom: 30px;
+    color: #667eea;
+}
+
+h2 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #667eea;
+}
+
+.difficulty-selection {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.difficulty-btn {
+    padding: 12px 24px;
+    font-size: 1em;
+    border: 2px solid #667eea;
+    background: white;
+    color: #667eea;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.difficulty-btn:hover {
+    background: #f0f0f0;
+}
+
+.difficulty-btn.selected {
+    background: #667eea;
+    color: white;
+}
+
+.main-btn {
+    padding: 15px 40px;
+    font-size: 1.2em;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin: 10px;
+    transition: all 0.3s;
+}
+
+.main-btn:hover {
+    background: #5568d3;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* 게임 화면 */
+#game-screen {
+    background: white;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+}
+
+.stat {
+    background: #f0f0f0;
+    padding: 10px 20px;
+    border-radius: 10px;
+}
+
+.label {
+    font-weight: bold;
+    color: #667eea;
+    margin-right: 5px;
+}
+
+#score, #timer {
+    font-weight: bold;
+    color: #333;
+}
+
+/* 진행도 바 */
+.progress-bar {
+    position: relative;
+    background: #e0e0e0;
+    height: 30px;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    width: 0%;
+    transition: width 0.3s;
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    color: #333;
+}
+
+/* 캔버스 */
+.canvas-container {
+    background: #fafafa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+}
+
+#game-canvas {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background: white;
+    cursor: crosshair;
+}
+
+.game-hint {
+    font-size: 1.1em;
+    color: #667eea;
+    padding: 10px;
+}
+
+/* 결과 화면 */
+.stars {
+    font-size: 3em;
+    margin: 20px 0;
+}
+
+.result-stats {
+    margin: 30px 0;
+}
+
+.result-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin: 10px 0;
+    background: #f0f0f0;
+    border-radius: 10px;
+}
+
+.result-label {
+    font-weight: bold;
+    color: #667eea;
+}
+
+.result-value {
+    font-size: 1.3em;
+    font-weight: bold;
+    color: #333;
+}
+
+.result-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* 최고 기록 화면 */
+#records-list {
+    margin: 20px 0;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.record-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    margin: 10px 0;
+    background: #f0f0f0;
+    border-radius: 10px;
+}
+
+.record-difficulty {
+    font-weight: bold;
+    color: #667eea;
+}
+
+.no-records {
+    padding: 40px;
+    color: #999;
+    font-style: italic;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 2em;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    .difficulty-selection {
+        flex-direction: column;
+    }
+
+    .difficulty-btn {
+        width: 100%;
+    }
+
+    .game-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .stat {
+        width: 100%;
+    }
+
+    .canvas-container {
+        padding: 10px;
+        min-height: 300px;
+    }
+
+    #game-canvas {
+        max-width: 100%;
+    }
+
+    .result-buttons {
+        flex-direction: column;
+    }
+
+    .main-btn {
+        width: 100%;
+    }
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.screen.active {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.difficulty-btn.selected {
+    animation: pulse 2s infinite;
+}
+    </style>
+</head>
+<body>
+    <!-- 메인 화면 -->
+    <div id="main-screen" class="screen active">
+        <div class="container">
+            <h1>🐟 생선 바르기 게임</h1>
+            <div class="difficulty-selection">
+                <button class="difficulty-btn" data-difficulty="easy">쉬움</button>
+                <button class="difficulty-btn selected" data-difficulty="normal">보통</button>
+                <button class="difficulty-btn" data-difficulty="hard">어려움</button>
+            </div>
+            <button id="start-btn" class="main-btn">게임 시작</button>
+            <button id="records-btn" class="main-btn">최고 기록</button>
+        </div>
+    </div>
+
+    <!-- 게임 화면 -->
+    <div id="game-screen" class="screen">
+        <div class="game-header">
+            <div class="stat">
+                <span class="label">점수:</span>
+                <span id="score">0</span>
+            </div>
+            <div class="stat">
+                <span class="label">시간:</span>
+                <span id="timer">--</span>
+            </div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+            <span class="progress-text" id="progress-text">0/0</span>
+        </div>
+        <div class="canvas-container">
+            <canvas id="game-canvas"></canvas>
+        </div>
+        <div class="game-hint">
+            💡 가시를 칼로 그어 제거하세요!
+        </div>
+    </div>
+
+    <!-- 결과 화면 -->
+    <div id="result-screen" class="screen">
+        <div class="container">
+            <h2>🎉 완료! 🎉</h2>
+            <div class="stars" id="stars"></div>
+            <div class="result-stats">
+                <div class="result-stat">
+                    <span class="result-label">최종 점수:</span>
+                    <span class="result-value" id="final-score">0</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-label">정확도:</span>
+                    <span class="result-value" id="accuracy">0%</span>
+                </div>
+                <div class="result-stat">
+                    <span class="result-label">소요 시간:</span>
+                    <span class="result-value" id="time-taken">0초</span>
+                </div>
+            </div>
+            <div class="result-buttons">
+                <button id="retry-btn" class="main-btn">다시하기</button>
+                <button id="home-btn" class="main-btn">메인으로</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 최고 기록 화면 -->
+    <div id="records-screen" class="screen">
+        <div class="container">
+            <h2>🏆 최고 기록</h2>
+            <div id="records-list">
+                <!-- 기록이 여기에 표시됩니다 -->
+            </div>
+            <button id="records-back-btn" class="main-btn">돌아가기</button>
+        </div>
+    </div>
+
+    <script>
+// ========== fish.js ==========
+/**
+ * 생선 클래스
+ * 생선의 모양, 가시(뼈) 위치 등을 관리
+ */
+class Fish {
+    constructor(canvasWidth, canvasHeight, difficulty) {
+        this.canvasWidth = canvasWidth;
+        this.canvasHeight = canvasHeight;
+        this.difficulty = difficulty;
+
+        // 생선 크기 및 위치
+        this.x = canvasWidth / 2;
+        this.y = canvasHeight / 2;
+        this.width = 300;
+        this.height = 120;
+
+        // 난이도별 가시 개수
+        this.boneCount = this.getBoneCount();
+        this.bones = [];
+        this.generateBones();
+    }
+
+    /**
+     * 난이도별 가시 개수 반환
+     */
+    getBoneCount() {
+        switch(this.difficulty) {
+            case 'easy': return 5;
+            case 'normal': return 7;
+            case 'hard': return 10;
+            default: return 7;
+        }
+    }
+
+    /**
+     * 가시(뼈) 생성
+     * 생선 몸통 내부에 랜덤하게 배치
+     */
+    generateBones() {
+        this.bones = [];
+        const spacing = this.width / (this.boneCount + 1);
+
+        for (let i = 0; i < this.boneCount; i++) {
+            // 생선 중앙선을 따라 배치하되, 약간의 랜덤성 추가
+            const x = this.x - this.width/2 + spacing * (i + 1);
+            const y = this.y + (Math.random() - 0.5) * (this.height * 0.4);
+
+            this.bones.push({
+                x: x,
+                y: y,
+                radius: 8,
+                removed: false,
+                marked: false // 체크 마크 표시용
+            });
+        }
+    }
+
+    /**
+     * 생선 그리기
+     */
+    draw(ctx) {
+        console.log('Drawing fish at:', this.x, this.y);
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // 그림자 효과
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetX = 4;
+        ctx.shadowOffsetY = 4;
+
+        // 꼬리 지느러미 (먼저 그려서 몸통 뒤에 위치)
+        ctx.fillStyle = '#FF9AA2';
+        ctx.strokeStyle = '#FF6B6B';
+        ctx.lineWidth = 3;
+
+        ctx.beginPath();
+        ctx.moveTo(-this.width/2, -15);
+        ctx.lineTo(-this.width/2 - 40, -35);
+        ctx.lineTo(-this.width/2 - 35, 0);
+        ctx.lineTo(-this.width/2 - 40, 35);
+        ctx.lineTo(-this.width/2, 15);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 꼬리 지느러미 디테일 선
+        ctx.strokeStyle = '#FF6B6B';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-this.width/2 - 10, -15);
+        ctx.lineTo(-this.width/2 - 35, 0);
+        ctx.moveTo(-this.width/2 - 10, 15);
+        ctx.lineTo(-this.width/2 - 35, 0);
+        ctx.stroke();
+
+        // 생선 몸통 (타원형)
+        const gradient = ctx.createLinearGradient(-this.width/2, -this.height/2, this.width/2, this.height/2);
+        gradient.addColorStop(0, '#FFB3BA');
+        gradient.addColorStop(0.5, '#FFCCD5');
+        gradient.addColorStop(1, '#FFB3BA');
+
+        ctx.fillStyle = gradient;
+        ctx.strokeStyle = '#FF6B6B';
+        ctx.lineWidth = 4;
+
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.width/2, this.height/2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 배 부분 (더 밝은 색)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.beginPath();
+        ctx.ellipse(0, this.height/6, this.width/2.5, this.height/4, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 비늘 패턴
+        ctx.strokeStyle = 'rgba(255, 150, 160, 0.3)';
+        ctx.lineWidth = 1.5;
+        for (let i = -this.width/3; i < this.width/3; i += 20) {
+            for (let j = -this.height/4; j < this.height/4; j += 20) {
+                ctx.beginPath();
+                ctx.arc(i, j - 10, 8, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+        }
+
+        ctx.shadowColor = 'transparent';
+
+        // 등 지느러미
+        ctx.fillStyle = '#FF9AA2';
+        ctx.strokeStyle = '#FF6B6B';
+        ctx.lineWidth = 3;
+
+        ctx.beginPath();
+        ctx.moveTo(-30, -this.height/2);
+        ctx.lineTo(-20, -this.height/2 - 25);
+        ctx.lineTo(0, -this.height/2 - 30);
+        ctx.lineTo(20, -this.height/2 - 25);
+        ctx.lineTo(30, -this.height/2);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 배 지느러미
+        ctx.beginPath();
+        ctx.moveTo(10, this.height/2);
+        ctx.lineTo(5, this.height/2 + 15);
+        ctx.lineTo(20, this.height/2 + 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // 생선 눈
+        const eyeX = this.width/3;
+        const eyeY = -this.height/5;
+
+        // 눈 흰자
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(eyeX, eyeY, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        // 눈동자
+        ctx.fillStyle = '#2C3E50';
+        ctx.beginPath();
+        ctx.arc(eyeX + 2, eyeY, 7, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 눈 하이라이트
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(eyeX + 4, eyeY - 2, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 생선 입 (미소)
+        ctx.strokeStyle = '#FF6B6B';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(this.width/2 - 15, 5, 10, 0.1, Math.PI * 0.8);
+        ctx.stroke();
+
+        // 아가미
+        ctx.strokeStyle = '#FF6B6B';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 3; i++) {
+            ctx.beginPath();
+            ctx.arc(this.width/6 - i * 8, 0, 25, Math.PI * 0.6, Math.PI * 1.4);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+
+    /**
+     * 가시(뼈) 그리기
+     */
+    drawBones(ctx) {
+        this.bones.forEach(bone => {
+            if (bone.removed) {
+                // 제거된 가시는 큰 체크 마크로 표시
+                if (bone.marked) {
+                    ctx.save();
+
+                    // 배경 원
+                    ctx.fillStyle = 'rgba(76, 175, 80, 0.2)';
+                    ctx.beginPath();
+                    ctx.arc(bone.x, bone.y, 15, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // 체크 마크
+                    ctx.strokeStyle = '#4CAF50';
+                    ctx.lineWidth = 4;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.beginPath();
+                    ctx.moveTo(bone.x - 8, bone.y);
+                    ctx.lineTo(bone.x - 2, bone.y + 8);
+                    ctx.lineTo(bone.x + 10, bone.y - 8);
+                    ctx.stroke();
+
+                    ctx.restore();
+                }
+            } else {
+                // 가시 그리기 (더 눈에 잘 띄게)
+                ctx.save();
+
+                // 가시 배경 (강조용)
+                ctx.fillStyle = 'rgba(255, 107, 107, 0.15)';
+                ctx.beginPath();
+                ctx.arc(bone.x, bone.y, bone.radius + 8, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 가시 몸통 (흰색 뼈 모양)
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 5;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(bone.x, bone.y - 15);
+                ctx.lineTo(bone.x, bone.y + 15);
+                ctx.stroke();
+
+                // 가시 옆가지 (더 길고 명확하게)
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(bone.x - 8, bone.y - 8);
+                ctx.lineTo(bone.x + 8, bone.y - 8);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(bone.x - 8, bone.y);
+                ctx.lineTo(bone.x + 8, bone.y);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(bone.x - 8, bone.y + 8);
+                ctx.lineTo(bone.x + 8, bone.y + 8);
+                ctx.stroke();
+
+                // 가시 위치 표시 (빨간 원 - 더 크게)
+                ctx.shadowColor = 'rgba(255, 71, 87, 0.4)';
+                ctx.shadowBlur = 8;
+
+                ctx.fillStyle = '#FF4757';
+                ctx.strokeStyle = '#DC143C';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(bone.x, bone.y, bone.radius + 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.shadowColor = 'transparent';
+
+                // 내부 하이라이트
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.beginPath();
+                ctx.arc(bone.x - 3, bone.y - 3, 4, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 경고 텍스트 (선택적)
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('!', bone.x, bone.y);
+
+                ctx.restore();
+            }
+        });
+    }
+
+    /**
+     * 특정 위치에 가시가 있는지 확인하고 제거
+     * @param {number} x - x 좌표
+     * @param {number} y - y 좌표
+     * @returns {boolean} - 가시를 제거했는지 여부
+     */
+    checkBoneRemoval(x, y) {
+        for (let bone of this.bones) {
+            if (!bone.removed) {
+                const distance = Math.sqrt(
+                    Math.pow(x - bone.x, 2) + Math.pow(y - bone.y, 2)
+                );
+
+                // 가시의 범위 내에 있으면 제거
+                if (distance < bone.radius + 5) {
+                    bone.removed = true;
+                    bone.marked = true;
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 모든 가시가 제거되었는지 확인
+     */
+    allBonesRemoved() {
+        return this.bones.every(bone => bone.removed);
+    }
+
+    /**
+     * 제거된 가시 개수 반환
+     */
+    getRemovedCount() {
+        return this.bones.filter(bone => bone.removed).length;
+    }
+
+    /**
+     * 전체 가시 개수 반환
+     */
+    getTotalCount() {
+        return this.bones.length;
+    }
+}
+
+// ========== ui.js ==========
+/**
+ * UI 컨트롤러
+ * 화면 전환 및 UI 업데이트 담당
+ */
+class UIController {
+    constructor() {
+        // 화면 요소들
+        this.screens = {
+            main: document.getElementById('main-screen'),
+            game: document.getElementById('game-screen'),
+            result: document.getElementById('result-screen'),
+            records: document.getElementById('records-screen')
+        };
+
+        // UI 요소들
+        this.elements = {
+            score: document.getElementById('score'),
+            timer: document.getElementById('timer'),
+            progressFill: document.getElementById('progress-fill'),
+            progressText: document.getElementById('progress-text'),
+            stars: document.getElementById('stars'),
+            finalScore: document.getElementById('final-score'),
+            accuracy: document.getElementById('accuracy'),
+            timeTaken: document.getElementById('time-taken'),
+            recordsList: document.getElementById('records-list')
+        };
+
+        // 난이도 선택
+        this.selectedDifficulty = 'normal';
+        this.setupDifficultyButtons();
+    }
+
+    /**
+     * 난이도 버튼 설정
+     */
+    setupDifficultyButtons() {
+        const difficultyButtons = document.querySelectorAll('.difficulty-btn');
+        difficultyButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                difficultyButtons.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                this.selectedDifficulty = btn.dataset.difficulty;
+            });
+        });
+    }
+
+    /**
+     * 화면 전환
+     */
+    showScreen(screenName) {
+        Object.values(this.screens).forEach(screen => {
+            screen.classList.remove('active');
+        });
+        if (this.screens[screenName]) {
+            this.screens[screenName].classList.add('active');
+        }
+    }
+
+    /**
+     * 점수 업데이트
+     */
+    updateScore(score) {
+        this.elements.score.textContent = Math.round(score);
+    }
+
+    /**
+     * 타이머 업데이트
+     */
+    updateTimer(seconds) {
+        if (seconds === null) {
+            this.elements.timer.textContent = '무제한';
+        } else {
+            this.elements.timer.textContent = `${seconds}초`;
+        }
+    }
+
+    /**
+     * 진행도 바 업데이트
+     */
+    updateProgress(removed, total) {
+        const percentage = (removed / total) * 100;
+        this.elements.progressFill.style.width = `${percentage}%`;
+        this.elements.progressText.textContent = `${removed}/${total}`;
+    }
+
+    /**
+     * 결과 화면 표시
+     */
+    showResult(stats) {
+        // 별점 계산 (점수 기반)
+        let starCount = 1;
+        if (stats.score >= 800) starCount = 3;
+        else if (stats.score >= 500) starCount = 2;
+
+        // 별 표시
+        const starHTML = '⭐'.repeat(starCount) + '☆'.repeat(3 - starCount);
+        this.elements.stars.innerHTML = starHTML;
+
+        // 통계 표시
+        this.elements.finalScore.textContent = Math.round(stats.score);
+        this.elements.accuracy.textContent = `${Math.round(stats.accuracy)}%`;
+        this.elements.timeTaken.textContent = `${stats.timeTaken}초`;
+
+        // 결과 화면으로 전환
+        this.showScreen('result');
+    }
+
+    /**
+     * 최고 기록 표시
+     */
+    showRecords() {
+        const records = this.loadRecords();
+        const recordsList = this.elements.recordsList;
+
+        if (records.length === 0) {
+            recordsList.innerHTML = '<div class="no-records">아직 기록이 없습니다</div>';
+        } else {
+            recordsList.innerHTML = records.map((record, index) => `
+                <div class="record-item">
+                    <div>
+                        <div class="record-difficulty">${this.getDifficultyText(record.difficulty)}</div>
+                        <div style="color: #999; font-size: 0.9em;">${record.date}</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 1.3em; font-weight: bold; color: #667eea;">
+                            ${Math.round(record.score)}점
+                        </div>
+                        <div style="color: #999; font-size: 0.9em;">
+                            정확도: ${Math.round(record.accuracy)}%
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        this.showScreen('records');
+    }
+
+    /**
+     * 난이도 텍스트 반환
+     */
+    getDifficultyText(difficulty) {
+        const texts = {
+            'easy': '쉬움',
+            'normal': '보통',
+            'hard': '어려움'
+        };
+        return texts[difficulty] || difficulty;
+    }
+
+    /**
+     * 기록 저장
+     */
+    saveRecord(difficulty, score, accuracy, timeTaken) {
+        const records = this.loadRecords();
+        const newRecord = {
+            difficulty,
+            score,
+            accuracy,
+            timeTaken,
+            date: new Date().toLocaleDateString('ko-KR')
+        };
+
+        records.push(newRecord);
+
+        // 점수 기준으로 정렬하고 상위 10개만 유지
+        records.sort((a, b) => b.score - a.score);
+        const topRecords = records.slice(0, 10);
+
+        localStorage.setItem('fishGameRecords', JSON.stringify(topRecords));
+    }
+
+    /**
+     * 기록 불러오기
+     */
+    loadRecords() {
+        const saved = localStorage.getItem('fishGameRecords');
+        return saved ? JSON.parse(saved) : [];
+    }
+
+    /**
+     * 선택된 난이도 반환
+     */
+    getSelectedDifficulty() {
+        return this.selectedDifficulty;
+    }
+}
+
+// ========== game.js ==========
+/**
+ * 생선 바르기 게임 - 메인 게임 로직
+ */
+class FishFilletingGame {
+    constructor() {
+        // 캔버스 설정
+        this.canvas = document.getElementById('game-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.setupCanvas();
+
+        // UI 컨트롤러
+        this.ui = new UIController();
+
+        // 게임 상태
+        this.gameState = 'idle'; // idle, playing, finished
+        this.fish = null;
+        this.difficulty = 'normal';
+
+        // 점수 관련
+        this.score = 0;
+        this.totalCuts = 0;
+        this.accurateCuts = 0;
+
+        // 타이머 관련
+        this.timeLimit = null;
+        this.remainingTime = null;
+        this.timerInterval = null;
+        this.startTime = null;
+
+        // 드래그 관련
+        this.isDragging = false;
+        this.dragPath = [];
+        this.lastCheckPoint = null;
+
+        // 이벤트 리스너 설정
+        this.setupEventListeners();
+
+        // 초기 화면
+        this.ui.showScreen('main');
+    }
+
+    /**
+     * 캔버스 크기 설정
+     */
+    setupCanvas() {
+        const container = this.canvas.parentElement;
+        const maxWidth = 600;
+        const maxHeight = 400;
+
+        // 컨테이너 크기를 가져오되, 최소값 보장
+        const containerWidth = container.clientWidth || 640;
+        this.canvas.width = Math.min(maxWidth, Math.max(400, containerWidth - 40));
+        this.canvas.height = maxHeight;
+
+        console.log('Canvas size:', this.canvas.width, 'x', this.canvas.height);
+    }
+
+    /**
+     * 이벤트 리스너 설정
+     */
+    setupEventListeners() {
+        // 메인 화면 버튼들
+        document.getElementById('start-btn').addEventListener('click', () => {
+            this.startGame();
+        });
+
+        document.getElementById('records-btn').addEventListener('click', () => {
+            this.ui.showRecords();
+        });
+
+        // 결과 화면 버튼들
+        document.getElementById('retry-btn').addEventListener('click', () => {
+            this.startGame();
+        });
+
+        document.getElementById('home-btn').addEventListener('click', () => {
+            this.ui.showScreen('main');
+        });
+
+        // 최고 기록 화면 버튼
+        document.getElementById('records-back-btn').addEventListener('click', () => {
+            this.ui.showScreen('main');
+        });
+
+        // 캔버스 마우스 이벤트 (데스크톱)
+        this.canvas.addEventListener('mousedown', (e) => this.handleDragStart(e));
+        this.canvas.addEventListener('mousemove', (e) => this.handleDragMove(e));
+        this.canvas.addEventListener('mouseup', (e) => this.handleDragEnd(e));
+        this.canvas.addEventListener('mouseleave', (e) => this.handleDragEnd(e));
+
+        // 캔버스 터치 이벤트 (모바일)
+        this.canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.handleDragStart(e.touches[0]);
+        });
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            this.handleDragMove(e.touches[0]);
+        });
+        this.canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.handleDragEnd(e);
+        });
+
+        // 윈도우 리사이즈
+        window.addEventListener('resize', () => {
+            if (this.gameState === 'playing') {
+                this.setupCanvas();
+                this.render();
+            }
+        });
+    }
+
+    /**
+     * 게임 시작
+     */
+    startGame() {
+        // 난이도 가져오기
+        this.difficulty = this.ui.getSelectedDifficulty();
+
+        // 타이머 설정
+        switch(this.difficulty) {
+            case 'easy':
+                this.timeLimit = null; // 무제한
+                break;
+            case 'normal':
+                this.timeLimit = 60;
+                break;
+            case 'hard':
+                this.timeLimit = 45;
+                break;
+        }
+
+        // UI 화면 먼저 전환 (캔버스가 보이도록)
+        this.ui.showScreen('game');
+
+        // 캔버스 크기 재설정 (화면이 보이는 상태에서)
+        setTimeout(() => {
+            this.setupCanvas();
+
+            // 게임 상태 초기화
+            this.gameState = 'playing';
+            this.score = 0;
+            this.totalCuts = 0;
+            this.accurateCuts = 0;
+            this.remainingTime = this.timeLimit;
+            this.startTime = Date.now();
+
+            // 생선 생성
+            this.fish = new Fish(this.canvas.width, this.canvas.height, this.difficulty);
+            console.log('Fish created at:', this.fish.x, this.fish.y, 'Size:', this.fish.width, this.fish.height);
+            console.log('Bones:', this.fish.bones.length);
+
+            // UI 업데이트
+            this.ui.updateScore(this.score);
+            this.ui.updateTimer(this.remainingTime);
+            this.ui.updateProgress(0, this.fish.getTotalCount());
+
+            // 타이머 시작
+            if (this.timeLimit !== null) {
+                this.startTimer();
+            }
+
+            // 렌더링 시작
+            this.render();
+        }, 50); // 화면 전환 후 약간의 딜레이
+    }
+
+    /**
+     * 타이머 시작
+     */
+    startTimer() {
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+
+        this.timerInterval = setInterval(() => {
+            this.remainingTime--;
+            this.ui.updateTimer(this.remainingTime);
+
+            if (this.remainingTime <= 0) {
+                this.endGame();
+            }
+        }, 1000);
+    }
+
+    /**
+     * 드래그 시작
+     */
+    handleDragStart(e) {
+        if (this.gameState !== 'playing') return;
+
+        this.isDragging = true;
+        this.dragPath = [];
+
+        const point = this.getCanvasPoint(e);
+        this.dragPath.push(point);
+        this.lastCheckPoint = point;
+    }
+
+    /**
+     * 드래그 중
+     */
+    handleDragMove(e) {
+        if (!this.isDragging || this.gameState !== 'playing') return;
+
+        const point = this.getCanvasPoint(e);
+        this.dragPath.push(point);
+
+        // 드래그 경로를 따라 가시 제거 체크
+        this.checkBoneRemovalAlongPath(point);
+
+        this.render();
+    }
+
+    /**
+     * 드래그 종료
+     */
+    handleDragEnd(e) {
+        if (this.gameState !== 'playing') return;
+
+        this.isDragging = false;
+        this.dragPath = [];
+        this.lastCheckPoint = null;
+        this.totalCuts++;
+
+        this.render();
+    }
+
+    /**
+     * 캔버스 좌표 계산
+     */
+    getCanvasPoint(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        return {
+            x: (e.clientX - rect.left) * (this.canvas.width / rect.width),
+            y: (e.clientY - rect.top) * (this.canvas.height / rect.height)
+        };
+    }
+
+    /**
+     * 드래그 경로를 따라 가시 제거 체크
+     */
+    checkBoneRemovalAlongPath(currentPoint) {
+        if (!this.lastCheckPoint) {
+            this.lastCheckPoint = currentPoint;
+            return;
+        }
+
+        // 마지막 체크 포인트부터 현재 포인트까지의 경로를 따라 체크
+        const dx = currentPoint.x - this.lastCheckPoint.x;
+        const dy = currentPoint.y - this.lastCheckPoint.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const steps = Math.ceil(distance / 2); // 2픽셀마다 체크
+
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const x = this.lastCheckPoint.x + dx * t;
+            const y = this.lastCheckPoint.y + dy * t;
+
+            if (this.fish.checkBoneRemoval(x, y)) {
+                this.accurateCuts++;
+                this.updateScore();
+                this.updateProgress();
+                this.checkGameCompletion();
+            }
+        }
+
+        this.lastCheckPoint = currentPoint;
+    }
+
+    /**
+     * 점수 업데이트
+     */
+    updateScore() {
+        const removedCount = this.fish.getRemovedCount();
+        this.score = removedCount * 100;
+        this.ui.updateScore(this.score);
+    }
+
+    /**
+     * 진행도 업데이트
+     */
+    updateProgress() {
+        const removedCount = this.fish.getRemovedCount();
+        const totalCount = this.fish.getTotalCount();
+        this.ui.updateProgress(removedCount, totalCount);
+    }
+
+    /**
+     * 게임 완료 체크
+     */
+    checkGameCompletion() {
+        if (this.fish.allBonesRemoved()) {
+            setTimeout(() => {
+                this.endGame();
+            }, 500); // 약간의 딜레이 후 종료
+        }
+    }
+
+    /**
+     * 게임 종료
+     */
+    endGame() {
+        if (this.gameState !== 'playing') return;
+
+        this.gameState = 'finished';
+
+        // 타이머 정지
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+            this.timerInterval = null;
+        }
+
+        // 최종 점수 계산
+        const removedCount = this.fish.getRemovedCount();
+        const totalCount = this.fish.getTotalCount();
+
+        // 기본 점수
+        let finalScore = removedCount * 100;
+
+        // 정확도 보너스
+        const accuracy = this.totalCuts > 0 ? (this.accurateCuts / this.totalCuts) * 100 : 0;
+        const accuracyBonus = (accuracy / 100) * 500;
+        finalScore += accuracyBonus;
+
+        // 시간 보너스 (시간 제한이 있는 경우)
+        if (this.timeLimit !== null && this.remainingTime > 0) {
+            const timeBonus = this.remainingTime * 10;
+            finalScore += timeBonus;
+        }
+
+        // 소요 시간 계산
+        const timeTaken = this.timeLimit !== null
+            ? this.timeLimit - this.remainingTime
+            : Math.floor((Date.now() - this.startTime) / 1000);
+
+        // 결과 저장
+        this.ui.saveRecord(this.difficulty, finalScore, accuracy, timeTaken);
+
+        // 결과 화면 표시
+        this.ui.showResult({
+            score: finalScore,
+            accuracy: accuracy,
+            timeTaken: timeTaken
+        });
+    }
+
+    /**
+     * 렌더링
+     */
+    render() {
+        // 캔버스 클리어
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.gameState !== 'playing') {
+            console.log('Not rendering, gameState:', this.gameState);
+            return;
+        }
+
+        // 생선 그리기
+        if (this.fish) {
+            console.log('Rendering fish and bones');
+            this.fish.draw(this.ctx);
+            this.fish.drawBones(this.ctx);
+        } else {
+            console.log('No fish to render!');
+        }
+
+        // 드래그 경로 그리기
+        if (this.isDragging && this.dragPath.length > 1) {
+            this.ctx.strokeStyle = '#667eea';
+            this.ctx.lineWidth = 3;
+            this.ctx.lineCap = 'round';
+            this.ctx.lineJoin = 'round';
+            this.ctx.globalAlpha = 0.5;
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.dragPath[0].x, this.dragPath[0].y);
+
+            for (let i = 1; i < this.dragPath.length; i++) {
+                this.ctx.lineTo(this.dragPath[i].x, this.dragPath[i].y);
+            }
+
+            this.ctx.stroke();
+            this.ctx.globalAlpha = 1.0;
+        }
+
+        // 게임이 진행 중이면 계속 렌더링
+        if (this.gameState === 'playing') {
+            requestAnimationFrame(() => this.render());
+        }
+    }
+}
+
+// 게임 시작
+let game;
+window.addEventListener('DOMContentLoaded', () => {
+    game = new FishFilletingGame();
+});
+    </script>
+</body>
+</html>
