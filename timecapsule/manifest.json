@@ -1,0 +1,99 @@
+{
+  "name": "2026 붉은 말과 함께 달리기",
+  "short_name": "붉은말 2026",
+  "description": "2026년 병오년 새해 다짐 타임캡슐 모바일 웹앱",
+  "start_url": "/timecapsule/index.html",
+  "display": "standalone",
+  "background_color": "#0A0E27",
+  "theme_color": "#DC143C",
+  "orientation": "portrait-primary",
+  "lang": "ko",
+  "dir": "ltr",
+  "scope": "/timecapsule/",
+  "icons": [
+    {
+      "src": "icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "categories": ["lifestyle", "social", "productivity"],
+  "shortcuts": [
+    {
+      "name": "새해 다짐 작성",
+      "short_name": "다짐 작성",
+      "description": "새로운 다짐을 빠르게 작성하세요",
+      "url": "/timecapsule/index.html#write",
+      "icons": [
+        {
+          "src": "icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "다짐 보기",
+      "short_name": "갤러리",
+      "description": "모두의 다짐을 확인하세요",
+      "url": "/timecapsule/index.html#gallery",
+      "icons": [
+        {
+          "src": "icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false
+}
