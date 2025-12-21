@@ -7,32 +7,7 @@
     <meta name="keywords" content="2026, 새해, 다짐, 타임캡슐, 병오년, 붉은말">
     <meta name="theme-color" content="#DC143C">
 
-    <!-- PWA Meta Tags -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="붉은말 2026">
-    <meta name="application-name" content="붉은말 2026">
-    <meta name="msapplication-TileColor" content="#DC143C">
-    <meta name="msapplication-tap-highlight" content="no">
-
     <title>2026 붉은 말과 함께 달리기 | 타임캡슐</title>
-
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json">
-
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" sizes="72x72" href="icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="96x96" href="icon-96x96.png">
-    <link rel="apple-touch-icon" sizes="128x128" href="icon-128x128.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="icon-192x192.png">
-    <link rel="apple-touch-icon" sizes="384x384" href="icon-384x384.png">
-    <link rel="apple-touch-icon" sizes="512x512" href="icon-512x512.png">
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="192x192" href="icon-192x192.png">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -195,39 +170,5 @@
 
     <!-- JavaScript -->
     <script src="js/app.js"></script>
-
-    <!-- Service Worker Registration -->
-    <script>
-        // Register Service Worker for PWA functionality
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/timecapsule/service-worker.js')
-                    .then((registration) => {
-                        console.log('✅ Service Worker registered successfully:', registration.scope);
-                    })
-                    .catch((error) => {
-                        console.log('❌ Service Worker registration failed:', error);
-                    });
-            });
-        }
-
-        // Install prompt for PWA
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the mini-infobar from appearing on mobile
-            e.preventDefault();
-            // Stash the event so it can be triggered later
-            deferredPrompt = e;
-            console.log('💾 PWA install prompt available');
-
-            // Optional: Show custom install button
-            // You can add a button here to trigger the install prompt
-        });
-
-        window.addEventListener('appinstalled', () => {
-            console.log('🎉 PWA installed successfully!');
-            deferredPrompt = null;
-        });
-    </script>
 </body>
 </html>
