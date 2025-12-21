@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="2026 병오년 붉은 말과 함께 달리기 - 새해 다짐 타임캡슐">
+    <meta name="keywords" content="2026, 새해, 다짐, 타임캡슐, 병오년, 붉은말">
+    <meta name="theme-color" content="#DC143C">
+
+    <title>2026 붉은 말과 함께 달리기 | 타임캡슐</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Background Stars -->
+    <div class="stars-container" aria-hidden="true">
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+        <div class="star"></div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Header Section -->
+        <header class="header-section">
+            <h1 class="main-title">
+                2026 붉은 말과 함께 달리기
+            </h1>
+            <p class="subtitle">
+                병오년 새해 다짐 타임캡슐 🎁
+            </p>
+
+            <!-- Red Horse Animation -->
+            <div class="horse-container" aria-label="붉은 말 애니메이션">
+                <div class="horse-track">
+                    <div class="horse">
+                        🐴
+                        <span class="gift-bundle" id="giftCount">🎁 <span class="count">5</span></span>
+                    </div>
+                    <div class="flame-effects">
+                        <span class="flame">🔥</span>
+                        <span class="flame">🔥</span>
+                        <span class="flame">🔥</span>
+                    </div>
+                </div>
+            </div>
+
+            <p class="header-description">
+                2025년에서 2026년으로 달려가는 붉은 말에게<br>
+                당신의 새해 다짐을 실어보내세요
+            </p>
+        </header>
+
+        <!-- Resolution Form Section -->
+        <section class="resolution-section">
+            <h2 class="section-title">✨ 새해 다짐 작성하기</h2>
+
+            <form id="resolutionForm" class="resolution-form">
+                <div class="form-group">
+                    <label for="userName" class="form-label">
+                        이름 (선택)
+                    </label>
+                    <input
+                        type="text"
+                        id="userName"
+                        name="userName"
+                        class="form-input"
+                        placeholder="익명으로 작성하려면 비워두세요"
+                        maxlength="20"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="resolution" class="form-label">
+                        2026년 다짐 <span class="required">*</span>
+                    </label>
+                    <textarea
+                        id="resolution"
+                        name="resolution"
+                        class="form-textarea"
+                        placeholder="2026년에 이루고 싶은 목표나 다짐을 작성해주세요..."
+                        maxlength="200"
+                        required
+                    ></textarea>
+                    <div class="char-counter">
+                        <span id="charCount">0</span> / 200자
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="userEmail" class="form-label">
+                        이메일 (선택)
+                    </label>
+                    <input
+                        type="email"
+                        id="userEmail"
+                        name="userEmail"
+                        class="form-input"
+                        placeholder="2025년 12월에 다짐을 다시 받아보세요"
+                    >
+                    <small class="form-hint">
+                        💌 타임캡슐 기능: 1년 후 이메일로 다시 전송됩니다
+                    </small>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <span class="btn-icon">🐴</span>
+                    붉은 말에 실어 보내기
+                    <span class="btn-icon">🔥</span>
+                </button>
+            </form>
+        </section>
+
+        <!-- Success Message -->
+        <div id="successMessage" class="success-message" role="alert" aria-live="polite">
+            <div class="success-content">
+                <span class="success-icon">✅</span>
+                <p class="success-text">다짐이 붉은 말에 실렸습니다!</p>
+            </div>
+        </div>
+
+        <!-- Resolutions Gallery Section -->
+        <section class="gallery-section">
+            <h2 class="section-title">🎁 모두의 새해 다짐</h2>
+            <p class="gallery-description">
+                다른 사람들의 다짐을 보며 함께 응원해요
+            </p>
+
+            <div id="galleryGrid" class="gallery-grid">
+                <!-- Resolution cards will be dynamically added here -->
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p class="footer-text">
+                2026 병오년 새해 다짐 타임캡슐<br>
+                <small>만든 이와 함께 응원합니다 🎉</small>
+            </p>
+        </footer>
+    </main>
+
+    <!-- Modal for Resolution Detail -->
+    <div id="resolutionModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-backdrop" aria-label="닫기"></div>
+        <div class="modal-content">
+            <button class="modal-close" aria-label="닫기">×</button>
+            <div class="modal-body">
+                <h3 id="modalTitle" class="modal-title"></h3>
+                <p id="modalResolution" class="modal-resolution"></p>
+                <div class="modal-meta">
+                    <span id="modalDate" class="modal-date"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html>
