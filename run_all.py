@@ -25,6 +25,12 @@ EXTRA_STEPS = [("6-1. [보조] 역주행 정의 미리보기", "rr_preview.py"),
                ("6-3. [보조] 테마 포장 검증", "theme_check.py"),
                ("6-4. [보조] 추가 그림", "rr_figures.py")]
 
+EXTRA2_STEPS = [("7-1. [보조] 총수익률 분해·보유기간", "x2_returns.py"),
+                ("7-2. [보조] 발행사 관점 지표", "x2_issuer.py"),
+                ("7-3. [보조] 비용 민감도", "x2_cost.py"),
+                ("7-4. [보조] 역선택 스트레스", "x2_adverse.py"),
+                ("7-5. [보조] 쉬운 말 핵심 숫자표", "x2_plain.py")]
+
 HEADER = """# 분석 로그 (analysis_log.md)
 
 이 파일은 `run_all.py`가 자동으로 만든다. 단계별 원본 로그는 `results/logs/`에 있다.
@@ -108,6 +114,16 @@ def main():
     (ROOT / "results" / "extra" / "analysis_log_extra.md").write_text(
         "# [보조·사후 탐색] 추가 분석 로그\n\n이 파일은 `run_all.py`가 자동으로 만든다. 기존 분석 결과와 `frozen_strategy.json`은 수정하지 않았다.\n\n---\n\n"
         + "\n\n---\n\n".join(p.read_text(encoding="utf-8") for p in xl), encoding="utf-8")
+    # ---------------- 7. 보조 분석(보강) (기존 결과·results/extra·frozen_strategy.json은 읽기만 함)
+    for label, script in EXTRA2_STEPS:
+        print(f"\n===== {label} ({script}) =====", flush=True)
+        s = time.time()
+        runpy.run_path(str(SRC / script), run_name="__main__")
+        print(f"----- {label} 완료: {time.time() - s:.1f}초", flush=True)
+    x2 = sorted((ROOT / "results" / "extra2" / "logs").glob("*.md"))
+    (ROOT / "results" / "extra2" / "analysis_log_extra2.md").write_text(
+        "# [보조 분석] 사업계획서 보강 분석 로그\n\n이 파일은 `run_all.py`가 자동으로 만든다. `results/`·`results/extra/`의 기존 결과와 "
+        "`frozen_strategy.json`은 수정하지 않았다.\n\n---\n\n" + "\n\n---\n\n".join(p.read_text(encoding="utf-8") for p in x2), encoding="utf-8")
     print(f"\n전체 완료: {time.time() - t0:.1f}초")
 
 
