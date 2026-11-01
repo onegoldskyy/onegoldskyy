@@ -2,10 +2,10 @@
 import pandas as pd
 from config import TABLES
 
-PCT_COLS = ["평균지급수익률", "지급수익률_중앙", "지급수익률_p5", "지급수익률_p95", "지급감소발생비율",
+PCT_COLS = ["평균지급수익률", "평균지급수익률_연환산", "지급수익률_중앙", "지급수익률_p5", "지급수익률_p95", "지급감소발생비율",
             "평균지급감소율", "감소율_중앙", "감소율_p5", "감소율_p95", "곡별감소율가중평균(보조)",
             "총수익률_평균", "총수익률_중앙", "총수익률_p5", "총수익률_p95", "손실확률(총수익률<0)",
-            "가격커버리지_평균", "최대1곡지급비중_평균", "최대1곡지급비중_p95", "비교B0수익률", "월별지급CV_평균"]
+            "가격커버리지_평균", "최대1곡지급비중_평균", "최대1곡지급비중_p95", "비교B0수익률"]
 
 
 def pct_table(df: pd.DataFrame) -> pd.DataFrame:
@@ -14,7 +14,7 @@ def pct_table(df: pd.DataFrame) -> pd.DataFrame:
     for c in d.columns:
         if c in PCT_COLS:
             d[c] = (d[c].astype(float) * 100).round(2)
-            ren[c] = c + ("" if c == "월별지급CV_평균" else "(%)")
+            ren[c] = c + "(%)"
     for c in d.columns:
         if d[c].dtype == float and c not in PCT_COLS:
             d[c] = d[c].round(3)
