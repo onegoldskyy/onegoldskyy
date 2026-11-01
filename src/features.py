@@ -19,6 +19,8 @@ def _base():
         _CACHE["r"] = r
         _CACHE["W"] = royalty_wide(r)
         _CACHE["S"] = source_amount_wide(r)
+        _CACHE["T"] = (r.assign(tot=r["amount_per_share"] * r["cnt_units"])
+                       .pivot(index="song_id", columns="ym", values="tot").sort_index(axis=1))
         _CACHE["c"] = load_cohort().set_index("song_id")
         _CACHE["t"] = load_trades()
     return _CACHE
@@ -55,6 +57,8 @@ def build_phase(pkey: str, price_window: int = 30):
     sel["prev_complete"] = prev_m.notna().all(axis=1)
     sel["ltm"] = ltm_m.sum(axis=1, min_count=12)
     sel["prev12"] = prev_m.sum(axis=1, min_count=12)
+    # 곡 전체 지급 규모(LTM) = Σ(1주당 지급 × 해당 월 주식 수). E3 가중에 사용
+    sel["ltm_total"] = B["T"].loc[ids, P["ltm"]].sum(axis=1, min_count=12)
     sel["lty_months"] = lty_m.notna().sum(axis=1)
     sel["lty"] = lty_m.mean(axis=1) * 12  # 최근 36개월 중 가용분의 연환산 평균
     sel["base_price"] = base["price"]
