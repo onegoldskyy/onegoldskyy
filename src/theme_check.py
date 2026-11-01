@@ -8,7 +8,7 @@ import json
 import warnings
 import numpy as np
 import pandas as pd
-from config import RESULTS, PHASES
+from config import RESULTS, PHASES, CACHE
 from engine import (run, apply_A, PhaseData, sample_bundles, weights, bundle_metrics, summarize, _rng)
 from rr_events import EXTRA
 
@@ -113,7 +113,7 @@ def main():
     wide.to_csv(TB / "3-15_테마포장_비교.csv", index=False, encoding="utf-8-sig")
     V.insert(0, "표시", TAG)
     V.round(3).to_csv(TB / "3-15b_테마포장_판정.csv", index=False, encoding="utf-8-sig")
-    Dd.to_pickle(EXTRA / "tables" / "_theme_diff.pkl")
+    Dd.to_pickle(CACHE / "theme_diff.pkl")
     log = [f"# [{TAG}] 추가작업 3단계: 테마 포장 검증\n",
            "- 모든 묶음: A3 적격 기준 + 20곡 + 동일 금액(T4만 A1 적격 기준). T0·T1·T4는 기존 엔진(run)을 그대로 써서 T0가 기존 최종 전략 수치와 같다.",
            f"- 공급 기준: 테마 후보 {MIN_SUPPLY}곡(3N) 이상, T3는 연대별 30곡(3×10) 이상. 미만이면 공급 수만 보고한다.",

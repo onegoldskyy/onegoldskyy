@@ -20,6 +20,11 @@ STEPS = [("1. 자료 점검", "step1_check.py"),
          ("4. 추가 분석", "extra_analysis.py"),
          ("5. 그림", "figures.py")]
 
+EXTRA_STEPS = [("6-1. [보조] 역주행 정의 미리보기", "rr_preview.py"),
+               ("6-2. [보조] 역주행 분석", "rr_analysis.py"),
+               ("6-3. [보조] 테마 포장 검증", "theme_check.py"),
+               ("6-4. [보조] 추가 그림", "rr_figures.py")]
+
 HEADER = """# 분석 로그 (analysis_log.md)
 
 이 파일은 `run_all.py`가 자동으로 만든다. 단계별 원본 로그는 `results/logs/`에 있다.
@@ -83,8 +88,27 @@ def main():
                          sm=statsmodels.__version__, sp=scipy.__version__)
     logs = sorted((ROOT / "results" / "logs").glob("*.md"))
     body = "\n\n---\n\n".join(p.read_text(encoding="utf-8") for p in logs)
-    (ROOT / "results" / "analysis_log.md").write_text(head + "\n---\n\n" + body, encoding="utf-8")
-    print(f"\n전체 완료: {time.time() - t0:.1f}초. results/analysis_log.md 생성")
+    new = head + "\n---\n\n" + body
+    path = ROOT / "results" / "analysis_log.md"
+    # 실행 시각 한 줄만 다르면 기존 파일을 그대로 둔다(결과 불변이면 파일도 불변).
+    strip = lambda txt: "\n".join(l for l in txt.splitlines() if not l.startswith("- 실행 시각:"))
+    if not path.exists() or strip(path.read_text(encoding="utf-8")) != strip(new):
+        path.write_text(new, encoding="utf-8")
+        print("results/analysis_log.md 갱신(내용 변경)")
+    else:
+        print("results/analysis_log.md 내용 동일 → 파일 유지")
+
+    # ---------------- 6. 보조·사후 탐색 (기존 결과·frozen_strategy.json은 읽기만 함)
+    for label, script in EXTRA_STEPS:
+        print(f"\n===== {label} ({script}) =====", flush=True)
+        s = time.time()
+        runpy.run_path(str(SRC / script), run_name="__main__")
+        print(f"----- {label} 완료: {time.time() - s:.1f}초", flush=True)
+    xl = sorted((ROOT / "results" / "extra" / "logs").glob("*.md"))
+    (ROOT / "results" / "extra" / "analysis_log_extra.md").write_text(
+        "# [보조·사후 탐색] 추가 분석 로그\n\n이 파일은 `run_all.py`가 자동으로 만든다. 기존 분석 결과와 `frozen_strategy.json`은 수정하지 않았다.\n\n---\n\n"
+        + "\n\n---\n\n".join(p.read_text(encoding="utf-8") for p in xl), encoding="utf-8")
+    print(f"\n전체 완료: {time.time() - t0:.1f}초")
 
 
 if __name__ == "__main__":
