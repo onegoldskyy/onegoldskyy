@@ -7,7 +7,7 @@ import runpy, sys, time
 from pathlib import Path
 SRC = Path(__file__).resolve().parent / "src"
 sys.path.insert(0, str(SRC))
-STEPS = ["rev_r0.py", "rev_features.py", "rev_run.py", "rev_combo.py", "rev_age_frontier.py", "rev_figs.py"]
+STEPS = ["rev_r0.py", "rev_features.py", "rev_run.py", "rev_combo.py", "rev_age_frontier.py", "rev_figs.py", "rev_second.py"]
 t0 = time.time()
 for s in STEPS:
     print(f"===== {s} =====", flush=True); t = time.time()

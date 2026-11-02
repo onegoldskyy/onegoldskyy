@@ -291,3 +291,19 @@ R6c["세기간부호(Δ가격수익)"] = R6c.set_index(["후보군", "지표", "
 tsave(R6c.round(3), "R6c_인기_묶음")
 (OUT / "analysis_log_2차탐색.md").write_text("\n".join(LOG), encoding="utf-8")
 print("done")
+
+# ================================================================ 기간별 부호 확인 (인기 회귀를 구성 연도별로)
+yr = []
+for lab, df in [("0.6단계 기본 조건 전체", L), ("7년 이상", L[L["m1_age"] >= 7])]:
+    for y in sorted(df["year"].unique()):
+        d0 = df[df["year"] == y]
+        for p in ["POP1", "POP2", "POP3", "POP4"]:
+            for dep, dlab in [("log_mult", "log 가격배수"), ("next_dec", "다음 해 지급감소율")]:
+                d = d0[[dep, p + "_q", "m1_age", "f1_stab", "f5_trans", "f6_bro", "artist"]].replace([np.inf, -np.inf], np.nan).dropna()
+                m = smf.ols(f"{dep} ~ {p}_q + m1_age + f1_stab + f5_trans + f6_bro", data=d).fit(cov_type="cluster", cov_kwds={"groups": d["artist"]})
+                yr.append({"표본": lab, "구성연도": y, "지표": p, "종속변수": dlab, "인기1분위상승시_변화": m.params[p + "_q"], "p값(참고)": m.pvalues[p + "_q"]})
+YR = pd.DataFrame(yr)
+sg = YR.groupby(["표본", "지표", "종속변수"])["인기1분위상승시_변화"].apply(lambda s: "+ 일치" if (s > 0).all() else ("− 일치" if (s < 0).all() else "불일치"))
+YR["세기간부호"] = YR.set_index(["표본", "지표", "종속변수"]).index.map(sg)
+tsave(YR.round(5), "R6a3_인기회귀_연도별부호")
+print(YR.groupby(["표본", "지표", "종속변수"])["세기간부호"].first().to_string())
