@@ -66,7 +66,7 @@ for ax, col in zip(axes, ["평균감소율(%)", "감소율p95(%)", "지급수익
     ax.set_xticks(range(1, 6)); ax.set_xlabel("곡 연령 5분위(1=가장 어림)"); ax.set_title(col, loc="left")
 axes[0].legend(frameon=False, fontsize=8)
 fig.suptitle("그림 R0e. 곡 연령 5분위별 20곡 묶음 성과 [수정보완·설명용, 판정 제외]", x=0.01, ha="left", fontsize=11, fontweight="bold")
-fig.text(0.01, -0.05, f"주: 분위별 무작위 20곡 3,000개. 연속 회귀의 꺾이는 점(−b₁/2b₂) = {turn:.1f}년은 후속 검증 가설로만 본다.",
+fig.text(0.01, -0.05, f"주: 분위별 무작위 20곡 3,000개. 연속 회귀의 꺾이는 점(-b1/(2*b2)) = {turn:.1f}년은 후속 검증 가설로만 본다.",
          fontsize=7.5, color="#5f5e5a")
 fig.tight_layout(); fig.savefig(FG / "R0e_연령곡선.png", dpi=300, bbox_inches="tight", facecolor=fig.get_facecolor()); plt.close(fig)
 
