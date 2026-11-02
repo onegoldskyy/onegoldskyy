@@ -81,8 +81,8 @@ for pk in PKS:
 tsave(pd.DataFrame(leak), "R6_인기지표_누출테스트")
 pc = []
 for pk in PKS:
-    C = POP[pk][["POP1", "POP2", "POP3", "POP4"]].corr(method="spearman"); C.insert(0, "기간", pk)
-    pc.append(C.reset_index().rename(columns={"index": "지표"}))
+    Cm = POP[pk][["POP1", "POP2", "POP3", "POP4"]].corr(method="spearman"); Cm.insert(0, "기간", pk)
+    pc.append(Cm.reset_index().rename(columns={"index": "지표"}))
 tsave(pd.concat(pc).round(3), "R6_인기지표_상관")
 LOG += ["- 인기 지표: POP1 아티스트 전송 지급 합계(선정용 12개월, 1주당), POP2 등록 곡 수(796곡 원장, 등록일 정보가 없어 2023-09-19 일괄 등록으로 봄), "
         "POP3 기초가격 기준일 이전 90일 거래대금 합계, POP4 같은 기간 곡별 거래일 비율(분모 = 시장 전체 체결일 수)의 아티스트 평균. 아티스트 = singer 원문.",
